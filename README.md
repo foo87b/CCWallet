@@ -1,0 +1,2 @@
+# CCWallet
+Cryptocurrency Discord Wallet
