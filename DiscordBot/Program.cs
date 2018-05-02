@@ -15,13 +15,14 @@ namespace CCWallet.DiscordBot
 
         static async Task Main(string[] args)
         {
-            Console.CancelKeyPress += OnCancelKeyPress;
-            ServiceProvider = ConfigureServices().BuildServiceProvider();
-
             try
             {
-                var config = ServiceProvider.GetService<Services.Configure>();
-                var discord = ServiceProvider.GetService<DiscordSocketClient>();
+                Console.CancelKeyPress += OnCancelKeyPress;
+                ServiceProvider = ConfigureServices().BuildServiceProvider();
+
+                var config = ServiceProvider.GetRequiredService<Services.ConfigureService>();
+                var command = ServiceProvider.GetRequiredService<Services.CommandHandlingService>();
+                var discord = ServiceProvider.GetRequiredService<DiscordSocketClient>();
 
                 await discord.LoginAsync(TokenType.Bot, config.DiscordToken);
                 await discord.StartAsync();
@@ -42,7 +43,8 @@ namespace CCWallet.DiscordBot
         private static IServiceCollection ConfigureServices()
         {
             return new ServiceCollection()
-                .AddSingleton<Services.Configure>()
+                .AddSingleton<Services.ConfigureService>()
+                .AddSingleton<Services.CommandHandlingService>()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {
                     DefaultRetryMode = RetryMode.AlwaysRetry,
