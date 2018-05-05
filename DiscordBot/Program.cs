@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Discord.Commands;
 
 namespace CCWallet.DiscordBot
 {
@@ -45,6 +44,7 @@ namespace CCWallet.DiscordBot
             return new ServiceCollection()
                 .AddSingleton<Services.ConfigureService>()
                 .AddSingleton<Services.CommandHandlingService>()
+                .AddSingleton<Services.WalletService>()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {
                     DefaultRetryMode = RetryMode.AlwaysRetry,
