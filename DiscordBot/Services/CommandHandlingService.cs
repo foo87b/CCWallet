@@ -1,16 +1,13 @@
-﻿using System;
+﻿using CCWallet.DiscordBot.Utilities.Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using CCWallet.DiscordBot.Utilities;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
 
 namespace CCWallet.DiscordBot.Services
 {
@@ -123,11 +120,11 @@ namespace CCWallet.DiscordBot.Services
 
                         if (result.Error == CommandError.Exception)
                         {
-                            await command.Context.Message.AddReactionAsync(DiscordReaction.Error);
+                            await command.Context.Message.AddReactionAsync(BotReaction.Error);
                         }
                         else if (!result.IsSuccess)
                         {
-                            await command.Context.Message.AddReactionAsync(DiscordReaction.Unknown);
+                            await command.Context.Message.AddReactionAsync(BotReaction.Unknown);
                         }
                     }
                 }
@@ -153,16 +150,16 @@ namespace CCWallet.DiscordBot.Services
                 {
                     if (TryEnqueue(result.Value))
                     {
-                        await result.Value.Context.Message.AddReactionAsync(DiscordReaction.InProgress);
+                        await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
                     }
                     else
                     {
-                        await result.Value.Context.Message.AddReactionAsync(DiscordReaction.Error);
+                        await result.Value.Context.Message.AddReactionAsync(BotReaction.Error);
                     }
                 }
                 else
                 {
-                    await result.Value.Context.Message.AddReactionAsync(DiscordReaction.Unknown);
+                    await result.Value.Context.Message.AddReactionAsync(BotReaction.Unknown);
                 }
             }
         }

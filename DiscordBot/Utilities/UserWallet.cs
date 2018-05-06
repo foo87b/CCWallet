@@ -90,6 +90,9 @@ namespace CCWallet.DiscordBot.Utilities
             // if not implementing BIP-0044 currency, use numbers above 0x70000000
             switch (Currency.Network.Name)
             {
+                case ExperiencePoints.NetworkName:
+                    return 0x70000001;
+
                 default:
                     if (Currency.Network.NetworkType == NetworkType.Mainnet)
                     {
