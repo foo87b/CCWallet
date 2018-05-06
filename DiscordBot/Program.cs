@@ -25,6 +25,7 @@ namespace CCWallet.DiscordBot
                 var discord = ServiceProvider.GetRequiredService<DiscordSocketClient>();
 
                 wallet.AddCurrency<Utilities.Currencies.ExperiencePoints>();
+                await command.AddCommandService("!debug").AddModuleAsync<Modules.DebugModule>();
 
                 await discord.LoginAsync(TokenType.Bot, config.DiscordToken);
                 await discord.StartAsync();
