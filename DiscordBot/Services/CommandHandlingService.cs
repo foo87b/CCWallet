@@ -148,12 +148,11 @@ namespace CCWallet.DiscordBot.Services
             {
                 if (result.Value.SearchResult.IsSuccess)
                 {
-                    if (TryEnqueue(result.Value))
+                    await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
+
+                    if (!TryEnqueue(result.Value))
                     {
-                        await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
-                    }
-                    else
-                    {
+                        await result.Value.Context.Message.RemoveReactionAsync(BotReaction.InProgress, Discord.CurrentUser);
                         await result.Value.Context.Message.AddReactionAsync(BotReaction.Error);
                     }
                 }
