@@ -116,7 +116,7 @@ namespace CCWallet.DiscordBot.Services
                 {
                     if (TryDequeue(prefix, out var command))
                     {
-                        var result = await command.Service.ExecuteAsync(command.Context, command.Command, ServiceProvider);
+                        var result = await command.Service.ExecuteAsync(command.Context, command.Input, ServiceProvider);
 
                         if (result.Error == CommandError.Exception)
                         {
