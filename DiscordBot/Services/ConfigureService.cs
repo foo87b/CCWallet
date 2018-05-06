@@ -25,6 +25,11 @@ namespace CCWallet.DiscordBot.Services
             WalletMasterKey = GetMasterKey().Derive(0, true);
         }
 
+        public string GetString(string key, string fallback = null)
+        {
+            return Env.GetString(key, fallback);
+        }
+
         private void Load(string directory)
         {
             var path = Path.Combine(directory ?? Directory.GetCurrentDirectory(), DotEnvFile);

@@ -21,6 +21,7 @@ namespace CCWallet.DiscordBot
 
                 var config = ServiceProvider.GetRequiredService<Services.ConfigureService>();
                 var command = ServiceProvider.GetRequiredService<Services.CommandHandlingService>();
+                var wallet = ServiceProvider.GetRequiredService<Services.WalletService>();
                 var discord = ServiceProvider.GetRequiredService<DiscordSocketClient>();
 
                 await discord.LoginAsync(TokenType.Bot, config.DiscordToken);
@@ -42,8 +43,8 @@ namespace CCWallet.DiscordBot
         private static IServiceCollection ConfigureServices()
         {
             return new ServiceCollection()
-                .AddSingleton<Services.ConfigureService>()
                 .AddSingleton<Services.CommandHandlingService>()
+                .AddSingleton<Services.ConfigureService>()
                 .AddSingleton<Services.WalletService>()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {
