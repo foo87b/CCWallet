@@ -67,6 +67,16 @@ namespace CCWallet.DiscordBot.Services
             {
                 return new ExtKey(xpub, Key.Parse(WalletPrivateKey));
             }
+            catch (SecurityException)
+            {
+                Console.WriteLine("Invalid password.");
+#if DEBUG
+                Console.WriteLine("Press Any Key To Exit...");
+                Console.Read();
+#endif
+                Environment.Exit(1);
+                return null;
+            }
             finally
             {
                 password?.Dispose();
