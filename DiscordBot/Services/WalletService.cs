@@ -1,4 +1,5 @@
 ﻿using CCWallet.DiscordBot.Utilities;
+using CCWallet.DiscordBot.Utilities.Insight;
 using Discord;
 using NBitcoin;
 using System;
@@ -9,25 +10,38 @@ namespace CCWallet.DiscordBot.Services
     public class WalletService
     {
         private ConfigureService Configure { get; }
-        private Dictionary<string, CurrencyBase> Currencies { get; } = new Dictionary<string, CurrencyBase>();
+        private Dictionary<string, ICurrency> Currencies { get; } = new Dictionary<string, ICurrency>();
+        private Dictionary<string, InsightClient> InsightClients { get; } = new Dictionary<string, InsightClient>();
 
         public WalletService(ConfigureService configure)
         {
             Configure = configure;
         }
 
-        public void AddCurrency<T>() where T : CurrencyBase, new()
+        public void AddCurrency(ICurrency currency, NetworkType network = NetworkType.Mainnet)
         {
-            var currency = new T();
-            currency.SetupInsight(Configure.GetString($"{currency.Symbol.ToUpper()}_INSIGHT"));
+            // load "CURRENCY_NETWORK_INSIGHT" environment value.
+            var endpoint = Configure.GetString($"{currency.CryptoCode}_{network}_INSIGHT".ToUpper()) ??
+                           throw new ArgumentNullException();
             
-            Currencies.Add(currency.Network.Name, currency);
+            Currencies[currency.GetNetwork(network).Name] = currency;
+            InsightClients[currency.GetNetwork(network).Name] = new InsightClient(endpoint);
         }
-        
-        public UserWallet GetUserWallet(string network, IUser user)
+
+        public ICurrency GetCurrency(Network network)
+        {
+            return Currencies[network.Name];
+        }
+
+        public InsightClient GetInsightClient(Network network)
+        {
+            return InsightClients[network.Name];
+        }
+
+        public UserWallet GetUserWallet(Network network, IUser user)
         {
             // BIP32 path: m / service_index' / user_id1' / user_id2' / user_id3' / reserved'
-            return new UserWallet(Currencies[network], user, Configure.GetExtKey(GetKeyPath(user.Id)));
+            return new UserWallet(this, network, user, Configure.GetExtKey(GetKeyPath(user.Id)));
         }
 
         private KeyPath GetKeyPath(ulong id)

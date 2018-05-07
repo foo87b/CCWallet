@@ -1,6 +1,7 @@
 ﻿using CCWallet.DiscordBot.Services;
 using CCWallet.DiscordBot.Utilities.Discord;
 using Discord.Commands;
+using NBitcoin;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -24,7 +25,7 @@ namespace CCWallet.DiscordBot.Modules
         [Command("wallet")]
         public async Task CommandWalletAsync(string key)
         {
-            var wallet = Wallet.GetUserWallet(key, Context.User);
+            var wallet = Wallet.GetUserWallet(Network.GetNetwork(key), Context.User);
             await wallet.UpdateBalanceAsync();
 
             await Task.WhenAll(new List<Task>()

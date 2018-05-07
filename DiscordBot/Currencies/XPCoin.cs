@@ -1,15 +1,20 @@
-﻿using NBitcoin;
+﻿using CCWallet.DiscordBot.Utilities;
+using NBitcoin;
 using NBitcoin.Protocol;
 using System;
+using System.Globalization;
 using System.IO;
 
-namespace CCWallet.DiscordBot.Altcoins
+namespace CCWallet.DiscordBot.Currencies
 {
-    public class XPCoin : NetworkSetBase
+    public class XPCoin : NetworkSetBase, ICurrency
     {
         public static XPCoin Instance { get; } = new XPCoin();
 
-        public override string CryptoCode => "XP";
+        public override string CryptoCode { get; } = "XP";
+        string ICurrency.Name { get; } = "eXperience Points";
+        int ICurrency.BIP44CoinType { get; } = 0x70000001;
+        int ICurrency.TransactionConfirms { get; } = 6;
 
         private XPCoin()
         {
@@ -137,6 +142,11 @@ namespace CCWallet.DiscordBot.Altcoins
                 .AddAlias("xp-regtest")
                 .AddAlias("xpcoin-reg")
                 .AddAlias("xpcoin-regtest");
+        }
+
+        string ICurrency.FormatBalance(Money money, CultureInfo culture, bool symbol)
+        {
+            return money.ToDecimal(MoneyUnit.BTC).ToString("N6", culture) + (symbol ? $" {CryptoCode}" : string.Empty);
         }
     }
 }

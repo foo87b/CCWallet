@@ -1,8 +1,10 @@
-﻿using CCWallet.DiscordBot.Utilities.Currencies;
+﻿using CCWallet.DiscordBot.Services;
+using CCWallet.DiscordBot.Utilities.Insight;
 using Discord;
 using NBitcoin;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,32 +13,37 @@ namespace CCWallet.DiscordBot.Utilities
     public class UserWallet
     {
         public IUser User { get; }
+        public Network Network { get; }
+        public ICurrency Currency { get; }
+        public InsightClient Insight { get; }
         public BitcoinAddress Address { get; }
-        public string TotalBalance => FormatBalance(PendingMoney + ConfirmedMoney);
-        public string PendingBalance => FormatBalance(PendingMoney);
-        public string ConfirmedBalance => FormatBalance(ConfirmedMoney);
-        public string UnconfirmedBalance => FormatBalance(UnconfirmedMoney);
+        public CultureInfo Culture { get; set; } = CultureInfo.CurrentCulture;
+        public string TotalBalance => Currency.FormatBalance(PendingMoney + ConfirmedMoney, Culture);
+        public string PendingBalance => Currency.FormatBalance(PendingMoney, Culture);
+        public string ConfirmedBalance => Currency.FormatBalance(ConfirmedMoney, Culture);
+        public string UnconfirmedBalance => Currency.FormatBalance(UnconfirmedMoney, Culture);
 
         private ExtKey ExtKey { get; }
-        private CurrencyBase Currency { get; }
         private List<Coin> UnspentCoins { get; } = new List<Coin>();
         private Money PendingMoney { get; set; } = Money.Zero;
         private Money ConfirmedMoney { get; set; } = Money.Zero;
         private Money UnconfirmedMoney { get; set; } = Money.Zero;
 
-        internal UserWallet(CurrencyBase currency, IUser user, ExtKey key)
+        public UserWallet(WalletService wallet, Network network, IUser user, ExtKey key)
         {
+            Network = network;
+            Insight = wallet.GetInsightClient(network);
+            Currency = wallet.GetCurrency(network);
+
             User = user;
             ExtKey = key;
-            Currency = currency;
-
-            Address = GetExtKey().ScriptPubKey.GetDestinationAddress(Currency.Network);
+            Address = GetExtKey().ScriptPubKey.GetDestinationAddress(network);
         }
 
         public async Task UpdateBalanceAsync()
         {
-            var result = await Currency.Insight.GetUnspentCoinsAsync(Address);
-            var require = (ulong) Currency.RequireConfirms;
+            var result = await Insight.GetUnspentCoinsAsync(Address);
+            var require = (ulong) Currency.TransactionConfirms;
             var pending = new List<Coin>();
             var confirmed = new List<Coin>();
             var unconfirmed = new List<Coin>();
@@ -88,24 +95,7 @@ namespace CCWallet.DiscordBot.Utilities
         {
             // SLIP-0044: Registered coin types for BIP-0044
             // if not implementing BIP-0044 currency, use numbers above 0x70000000
-            switch (Currency.Network.Name)
-            {
-                case ExperiencePoints.NetworkName:
-                    return 0x70000001;
-
-                default:
-                    if (Currency.Network.NetworkType == NetworkType.Mainnet)
-                    {
-                        throw new ArgumentException();
-                    }
-
-                    return 0x00000001;
-            }
-        }
-
-        private string FormatBalance(Money money)
-        {
-            return  money.ToDecimal(MoneyUnit.BTC).ToString(Currency.BalanceFormatString);
+            return Network.NetworkType == NetworkType.Mainnet ? Currency.BIP44CoinType : 0x00000001;
         }
     }
 }
