@@ -13,6 +13,7 @@ namespace CCWallet.DiscordBot.Currencies
 
         public override string CryptoCode { get; } = "XP";
         string ICurrency.Name { get; } = "eXperience Points";
+        string ICurrency.IconUrl { get; } = "https://raw.githubusercontent.com/eXperiencePoints/XPCoin/master/src/qt/res/icons/bitcoin.png";
         int ICurrency.BIP44CoinType { get; } = 0x70000001;
         int ICurrency.TransactionConfirms { get; } = 6;
 

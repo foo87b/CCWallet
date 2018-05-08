@@ -6,6 +6,7 @@ namespace CCWallet.DiscordBot.Utilities
     public interface ICurrency : INetworkSet
     {
         string Name { get; }
+        string IconUrl { get; }
         int BIP44CoinType { get; }
         int TransactionConfirms { get; }
 
