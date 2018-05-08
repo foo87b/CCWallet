@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NBitcoin;
+using System;
 using System.Runtime.Serialization;
 
 namespace CCWallet.DiscordBot.Utilities.Insight
@@ -26,5 +27,10 @@ namespace CCWallet.DiscordBot.Utilities.Insight
 
         [DataMember(Name = "confirmations")]
         public UInt64 Confirmations { get; set; }
+
+        public Coin ToCoin()
+        {
+            return new Coin(uint256.Parse(TransactionId), Convert.ToUInt32(ValueOut), Money.FromUnit(Amount, MoneyUnit.BTC), new Script(ScriptPubKey));
+        }
     }
 }

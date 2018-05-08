@@ -1,6 +1,7 @@
 ﻿using NBitcoin;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
@@ -21,21 +22,8 @@ namespace CCWallet.DiscordBot.Utilities.Insight
             var builder = new UriBuilder(BaseUri);
             builder.Path += $"/addr/{address}/utxo";
             builder.Query = "noCache=1";
-
-            var coins = new Dictionary<Coin, ulong>();
-            var result = await FetchAsync<IList<UnspentOutput>>(builder.Uri);
-
-            foreach (var utxo in result)
-            {
-                var txid = uint256.Parse(utxo.TransactionId);
-                var vout = Convert.ToUInt32(utxo.ValueOut);
-                var amount = Money.FromUnit(utxo.Amount, MoneyUnit.BTC);
-                var script = new Script(utxo.ScriptPubKey);
-
-                coins.Add(new Coin(txid, vout, amount, script), utxo.Confirmations);
-            }
-
-            return coins;
+            
+            return (await FetchAsync<IList<UnspentOutput>>(builder.Uri)).ToDictionary(utxo => utxo.ToCoin(), utxo => utxo.Confirmations);
         }
 
         private async Task<T> FetchAsync<T>(Uri uri) where T : class
