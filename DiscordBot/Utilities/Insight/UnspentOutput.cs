@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using NBitcoin.DataEncoders;
 using System;
 using System.Runtime.Serialization;
 
@@ -30,7 +31,7 @@ namespace CCWallet.DiscordBot.Utilities.Insight
 
         public Coin ToCoin()
         {
-            return new Coin(uint256.Parse(TransactionId), Convert.ToUInt32(ValueOut), Money.FromUnit(Amount, MoneyUnit.BTC), new Script(ScriptPubKey));
+            return new Coin(uint256.Parse(TransactionId), Convert.ToUInt32(ValueOut), Money.FromUnit(Amount, MoneyUnit.BTC), new Script(Encoders.Hex.DecodeData(ScriptPubKey)));
         }
     }
 }
