@@ -25,7 +25,7 @@ namespace CCWallet.DiscordBot.Utilities.Insight
         [DataMember(Name = "vout")]
         public UInt64 ValueOut { get; set; }
 
-        [DataMember(Name = "confirmations")]
+        [DataMember(Name = "confirmations", EmitDefaultValue = false)]
         public UInt64 Confirmations { get; set; }
 
         public Coin ToCoin()
