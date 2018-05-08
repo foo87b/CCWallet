@@ -19,16 +19,10 @@ namespace CCWallet.DiscordBot
                 Console.CancelKeyPress += OnCancelKeyPress;
                 ServiceProvider = ConfigureServices().BuildServiceProvider();
 
-                var config = ServiceProvider.GetRequiredService<Services.ConfigureService>();
-                var command = ServiceProvider.GetRequiredService<Services.CommandHandlingService>();
-                var wallet = ServiceProvider.GetRequiredService<Services.WalletService>();
-                var discord = ServiceProvider.GetRequiredService<DiscordSocketClient>();
+                SetupCommandHandlingService();
+                SetupWalletService();
 
-                wallet.AddCurrency(Currencies.XPCoin.Instance);
-                await command.AddCommandService("!debug").AddModuleAsync<Modules.DebugModule>();
-
-                await discord.LoginAsync(TokenType.Bot, config.DiscordToken);
-                await discord.StartAsync();
+                await StartDiscord();
             }
             catch (Exception exception)
             {
@@ -53,6 +47,32 @@ namespace CCWallet.DiscordBot
                 {
                     DefaultRetryMode = RetryMode.AlwaysRetry,
                 }));
+        }
+
+        private static void SetupCommandHandlingService()
+        {
+            var command = ServiceProvider.GetRequiredService<Services.CommandHandlingService>();
+
+            Task.WaitAll(new[]
+            {
+                command.AddCommandService("!debug").AddModuleAsync<Modules.DebugModule>(),
+            });
+        }
+
+        private static void SetupWalletService()
+        {
+            var wallet = ServiceProvider.GetRequiredService<Services.WalletService>();
+
+            wallet.AddCurrency(Currencies.XPCoin.Instance);
+        }
+
+        private static async Task StartDiscord()
+        {
+            var config = ServiceProvider.GetRequiredService<Services.ConfigureService>();
+            var discord = ServiceProvider.GetRequiredService<DiscordSocketClient>();
+
+            await discord.LoginAsync(TokenType.Bot, config.DiscordToken);
+            await discord.StartAsync();
         }
 
         private static async void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
