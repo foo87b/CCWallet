@@ -20,6 +20,7 @@ namespace CCWallet.DiscordBot
                 ServiceProvider = ConfigureServices().BuildServiceProvider();
 
                 SetupCommandHandlingService();
+                SetupCultureService();
                 SetupWalletService();
 
                 await StartDiscord();
@@ -42,6 +43,7 @@ namespace CCWallet.DiscordBot
             return new ServiceCollection()
                 .AddSingleton<Services.CommandHandlingService>()
                 .AddSingleton<Services.ConfigureService>()
+                .AddSingleton<Services.CultureService>()
                 .AddSingleton<Services.WalletService>()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {
@@ -57,6 +59,13 @@ namespace CCWallet.DiscordBot
             {
                 command.AddCommandService("!debug").AddModuleAsync<Modules.DebugModule>(),
             });
+        }
+
+        private static void SetupCultureService()
+        {
+            var culture = ServiceProvider.GetRequiredService<Services.CultureService>();
+
+            culture.AddLocale<Translations.ja>();
         }
 
         private static void SetupWalletService()
