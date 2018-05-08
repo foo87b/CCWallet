@@ -4,6 +4,7 @@ using NBitcoin.Protocol;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace CCWallet.DiscordBot.Currencies
 {
@@ -37,7 +38,7 @@ namespace CCWallet.DiscordBot.Currencies
 
         public class XPCoinTransaction : Transaction
         {
-            private UInt32 nTime = 0;
+            private UInt32 nTime = Convert.ToUInt32(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
             public DateTimeOffset Time
             {
@@ -70,10 +71,14 @@ namespace CCWallet.DiscordBot.Currencies
                         memory.Position = 0;
                         base.ReadWrite(tx);
                         nTime = BitConverter.ToUInt32(header, 4);
+                        Outputs.ForEach(o => o.Value *= 100);
                     }
                     else
                     {
-                        base.ReadWrite(tx);
+                        var dummy = new Transaction() {Version = Version, LockTime = LockTime};
+                        dummy.Inputs.AddRange(Inputs);
+                        dummy.Outputs.AddRange(Outputs.Select(o => new TxOut(o.Value / 100, o.ScriptPubKey)));
+                        dummy.ReadWrite(tx);
 
                         var binary = memory.ToArray();
                         stream.ReadWrite(ref binary, 0, 4);                 // int nVersion
