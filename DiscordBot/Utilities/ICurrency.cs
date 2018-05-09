@@ -11,8 +11,12 @@ namespace CCWallet.DiscordBot.Utilities
         string IconUrl { get; }
         int BIP44CoinType { get; }
         int TransactionConfirms { get; }
+        int BaseAmountUnit { get; }
+        decimal MinAmount { get; }
+        decimal MaxAmount { get; }
 
-        string FormatBalance(Money money, CultureInfo culture, bool symbol = true);
+        string FormatMoney(Money money, CultureInfo culture, bool symbol = true);
         Money CalculateFee(TransactionBuilder builder, IEnumerable<UnspentOutput.UnspentCoin> unspnets);
+        TransactionCheckResult VerifyTransaction(Transaction tx);
     }
 }

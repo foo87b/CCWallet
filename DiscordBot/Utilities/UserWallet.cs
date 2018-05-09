@@ -20,10 +20,10 @@ namespace CCWallet.DiscordBot.Utilities
         public InsightClient Insight { get; }
         public BitcoinAddress Address { get; }
         public CultureInfo Culture { get; set; } = CultureInfo.CurrentCulture;
-        public string TotalBalance => Currency.FormatBalance(PendingMoney + ConfirmedMoney, Culture);
-        public string PendingBalance => Currency.FormatBalance(PendingMoney, Culture);
-        public string ConfirmedBalance => Currency.FormatBalance(ConfirmedMoney, Culture);
-        public string UnconfirmedBalance => Currency.FormatBalance(UnconfirmedMoney, Culture);
+        public string TotalBalance => Currency.FormatMoney(PendingMoney + ConfirmedMoney, Culture);
+        public string PendingBalance => Currency.FormatMoney(PendingMoney, Culture);
+        public string ConfirmedBalance => Currency.FormatMoney(ConfirmedMoney, Culture);
+        public string UnconfirmedBalance => Currency.FormatMoney(UnconfirmedMoney, Culture);
 
         private ExtKey ExtKey { get; }
         private List<UnspentOutput.UnspentCoin> UnspentCoins { get; } = new List<UnspentOutput.UnspentCoin>();

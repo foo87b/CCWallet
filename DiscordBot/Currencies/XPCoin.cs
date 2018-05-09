@@ -19,6 +19,9 @@ namespace CCWallet.DiscordBot.Currencies
         string ICurrency.IconUrl { get; } = "https://raw.githubusercontent.com/eXperiencePoints/XPCoin/master/src/qt/res/icons/bitcoin.png";
         int ICurrency.BIP44CoinType { get; } = 0x70000001;
         int ICurrency.TransactionConfirms { get; } = 6;
+        int ICurrency.BaseAmountUnit { get; } = 1000000;
+        decimal ICurrency.MinAmount { get; } = 0.01m;
+        decimal ICurrency.MaxAmount { get; } = 1000000000m;
 
         private XPCoin()
         {
@@ -176,7 +179,7 @@ namespace CCWallet.DiscordBot.Currencies
                 .AddAlias("xpcoin-regtest");
         }
         
-        string ICurrency.FormatBalance(Money money, CultureInfo culture, bool symbol)
+        string ICurrency.FormatMoney(Money money, CultureInfo culture, bool symbol)
         {
             return money.ToDecimal(MoneyUnit.BTC).ToString("N6", culture) + (symbol ? $" {CryptoCode}" : string.Empty);
         }
@@ -194,6 +197,11 @@ namespace CCWallet.DiscordBot.Currencies
             fee += tx.Outputs.Count(o => o.Value < Money.CENT) * XPCoinTransaction.MinTxFee;
 
             return fee >= 0 ? Money.Min(fee, XPCoinTransaction.MaxMoney) : XPCoinTransaction.MaxMoney;
+        }
+
+        TransactionCheckResult ICurrency.VerifyTransaction(Transaction tx)
+        {
+            return ((XPCoinTransaction) tx).Check();
         }
     }
 }
