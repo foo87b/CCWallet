@@ -1,7 +1,9 @@
 ﻿using CCWallet.DiscordBot.Utilities;
+using CCWallet.DiscordBot.Utilities.Insight;
 using NBitcoin;
 using NBitcoin.Protocol;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -149,10 +151,28 @@ namespace CCWallet.DiscordBot.Currencies
                 .AddAlias("xpcoin-reg")
                 .AddAlias("xpcoin-regtest");
         }
-
+        
         string ICurrency.FormatBalance(Money money, CultureInfo culture, bool symbol)
         {
             return money.ToDecimal(MoneyUnit.BTC).ToString("N6", culture) + (symbol ? $" {CryptoCode}" : string.Empty);
+        }
+
+        Money ICurrency.CalculateFee(TransactionBuilder builder, IEnumerable<UnspentOutput.UnspentCoin> unspents)
+        {
+            var minTxFee = Money.Satoshis(1000);
+            var maxMoney = Money.Satoshis(long.MaxValue);
+            var tx = builder.BuildTransaction(true);
+
+            var op = tx.Inputs.Select(i => i.PrevOut).ToList();
+            var coins = unspents.Where(c => op.Contains(c.Outpoint));
+            var bytes = tx.GetSerializedSize();
+
+            var priority = coins.Select(c => Convert.ToDouble(c.Amount / 100 * c.Confirms)).Sum() / bytes;
+            var fee = priority > 576000d && bytes < 1000 ? Money.Zero : minTxFee * (1 + bytes / 1000);
+
+            fee += tx.Outputs.Count(o => o.Value < Money.CENT) * minTxFee;
+
+            return (fee >= 0 && fee <= maxMoney) ? fee : maxMoney;
         }
     }
 }

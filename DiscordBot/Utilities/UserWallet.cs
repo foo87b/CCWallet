@@ -26,7 +26,7 @@ namespace CCWallet.DiscordBot.Utilities
         public string UnconfirmedBalance => Currency.FormatBalance(UnconfirmedMoney, Culture);
 
         private ExtKey ExtKey { get; }
-        private List<Coin> UnspentCoins { get; } = new List<Coin>();
+        private List<UnspentOutput.UnspentCoin> UnspentCoins { get; } = new List<UnspentOutput.UnspentCoin>();
         private Money PendingMoney { get; set; } = Money.Zero;
         private Money ConfirmedMoney { get; set; } = Money.Zero;
         private Money UnconfirmedMoney { get; set; } = Money.Zero;
@@ -55,6 +55,20 @@ namespace CCWallet.DiscordBot.Utilities
             PendingMoney = MoneyExtensions.Sum(pending.Select(c => c.Amount));
             ConfirmedMoney = MoneyExtensions.Sum(confirmed.Select(c => c.Amount));
             UnconfirmedMoney = MoneyExtensions.Sum(unconfirmed.Select(c => c.Amount));
+        }
+
+        public Transaction BuildTransaction(IDestination destination, decimal amount)
+        {
+            var builder = new TransactionBuilder()
+                .SetChange(Address)
+                .SetConsensusFactory(Network)
+                .AddKeys(GetExtKey().PrivateKey)
+                .AddCoins(UnspentCoins)
+                .Send(destination, Money.FromUnit(amount, MoneyUnit.BTC));
+
+            builder.SendFees(Currency.CalculateFee(builder, UnspentCoins));
+
+            return builder.BuildTransaction(true);
         }
 
         public bool TryBroadcast(Transaction tx, out string error)
