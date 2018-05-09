@@ -40,6 +40,9 @@ namespace CCWallet.DiscordBot.Currencies
 
         public class XPCoinTransaction : Transaction
         {
+            public static readonly Money MaxMoney = Money.Coins(20000000000m); // MAX_MONEY  = COIN * 200000000000 (but NBitcoin says overflow. truncate to 20000000000)
+            public static readonly Money MinTxFee = Money.Coins(0.00001m);     // MIN_TX_FEE = COIN * 0.00001
+
             private UInt32 nTime = Convert.ToUInt32(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
             public DateTimeOffset Time
@@ -73,14 +76,14 @@ namespace CCWallet.DiscordBot.Currencies
                         memory.Position = 0;
                         base.ReadWrite(tx);
                         nTime = BitConverter.ToUInt32(header, 4);
-                        Outputs.ForEach(o => o.Value *= 100);
+                        Outputs.ForEach(o => o.Value *= 100); // NOTICE: Change Unit (XP to BTC)
                     }
                     else
                     {
-                        var dummy = new Transaction() {Version = Version, LockTime = LockTime};
-                        dummy.Inputs.AddRange(Inputs);
-                        dummy.Outputs.AddRange(Outputs.Select(o => new TxOut(o.Value / 100, o.ScriptPubKey)));
-                        dummy.ReadWrite(tx);
+                        var tmp = new Transaction() {Version = Version, LockTime = LockTime};
+                        tmp.Inputs.AddRange(Inputs);
+                        tmp.Outputs.AddRange(Outputs.Select(o => new TxOut(o.Value / 100, o.ScriptPubKey))); // NOTICE: Change Unit (BTC to XP)
+                        tmp.ReadWrite(tx);
 
                         var binary = memory.ToArray();
                         stream.ReadWrite(ref binary, 0, 4);                 // int nVersion
@@ -88,6 +91,27 @@ namespace CCWallet.DiscordBot.Currencies
                         stream.ReadWrite(ref binary, 4, binary.Length - 4); // std::vector<CTxIn> vin; std::vector<CTxOut> vout; uint32_t nLockTime;
                     }
                 }
+            }
+
+            public new TransactionCheckResult Check()
+            {
+                var result = base.Check();
+
+                if (result == TransactionCheckResult.OutputTooLarge)
+                {
+                    result = Outputs.Any(o => o.Value >= MaxMoney)
+                        ? TransactionCheckResult.OutputTooLarge
+                        : TransactionCheckResult.OutputTotalTooLarge;
+                }
+
+                if (result == TransactionCheckResult.OutputTotalTooLarge)
+                {
+                    result = Outputs.Sum(o => o.Value) >= MaxMoney
+                        ? TransactionCheckResult.OutputTotalTooLarge
+                        : TransactionCheckResult.Success;
+                }
+
+                return result;
             }
         }
 
@@ -159,20 +183,17 @@ namespace CCWallet.DiscordBot.Currencies
 
         Money ICurrency.CalculateFee(TransactionBuilder builder, IEnumerable<UnspentOutput.UnspentCoin> unspents)
         {
-            var minTxFee = Money.Satoshis(1000);
-            var maxMoney = Money.Satoshis(long.MaxValue);
             var tx = builder.BuildTransaction(true);
-
             var op = tx.Inputs.Select(i => i.PrevOut).ToList();
-            var coins = unspents.Where(c => op.Contains(c.Outpoint));
             var bytes = tx.GetSerializedSize();
+            var coins = unspents.Where(c => op.Contains(c.Outpoint));
 
-            var priority = coins.Select(c => Convert.ToDouble(c.Amount / 100 * c.Confirms)).Sum() / bytes;
-            var fee = priority > 576000d && bytes < 1000 ? Money.Zero : minTxFee * (1 + bytes / 1000);
+            var priority = coins.Sum(c => Convert.ToDouble(c.Amount / 100 * c.Confirms)) / bytes;                        // NOTICE: Change Unit (BTC to XP)
+            var fee = priority > 576000d && bytes < 1000 ? Money.Zero : XPCoinTransaction.MinTxFee * (1 + bytes / 1000); // NOTICE: Change Unit (BTC to XP)
 
-            fee += tx.Outputs.Count(o => o.Value < Money.CENT) * minTxFee;
+            fee += tx.Outputs.Count(o => o.Value < Money.CENT) * XPCoinTransaction.MinTxFee;
 
-            return (fee >= 0 && fee <= maxMoney) ? fee : maxMoney;
+            return fee >= 0 ? Money.Min(fee, XPCoinTransaction.MaxMoney) : XPCoinTransaction.MaxMoney;
         }
     }
 }
