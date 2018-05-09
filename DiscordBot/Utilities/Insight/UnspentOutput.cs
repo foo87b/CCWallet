@@ -29,9 +29,23 @@ namespace CCWallet.DiscordBot.Utilities.Insight
         [DataMember(Name = "confirmations", EmitDefaultValue = false)]
         public UInt64 Confirmations { get; set; }
 
-        public Coin ToCoin()
+        public class UnspentCoin : Coin
         {
-            return new Coin(uint256.Parse(TransactionId), Convert.ToUInt32(ValueOut), Money.FromUnit(Amount, MoneyUnit.BTC), new Script(Encoders.Hex.DecodeData(ScriptPubKey)));
+            public DateTimeOffset Time { get; }
+            public int Confirms { get; }
+
+            public UnspentCoin(UnspentOutput output)
+            {
+                Time = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(output.Timestamp));
+                Confirms = Convert.ToInt32(output.Confirmations);
+                Outpoint = new OutPoint(uint256.Parse(output.TransactionId), Convert.ToUInt32(output.ValueOut));
+                TxOut = new TxOut(Money.FromUnit(output.Amount, MoneyUnit.BTC), new Script(Encoders.Hex.DecodeData(output.ScriptPubKey)));
+            }
+        }
+
+        public UnspentCoin ToUnspentCoin()
+        {
+            return new UnspentCoin(this);
         }
     }
 }

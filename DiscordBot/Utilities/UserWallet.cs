@@ -45,26 +45,9 @@ namespace CCWallet.DiscordBot.Utilities
         public async Task UpdateBalanceAsync()
         {
             var result = await Insight.GetUnspentCoinsAsync(Address);
-            var require = (ulong) Currency.TransactionConfirms;
-            var pending = new List<Coin>();
-            var confirmed = new List<Coin>();
-            var unconfirmed = new List<Coin>();
-
-            foreach ((var coin, var confirms) in result)
-            {
-                if (confirms <= 0)
-                {
-                    unconfirmed.Add(coin);
-                }
-                else if (confirms < require)
-                {
-                    pending.Add(coin);
-                }
-                else
-                {
-                    confirmed.Add(coin);
-                }
-            }
+            var pending = result.Where(c => c.Confirms > 0 && c.Confirms < Currency.TransactionConfirms);
+            var confirmed = result.Where(c => c.Confirms >= Currency.TransactionConfirms);
+            var unconfirmed = result.Where(c => c.Confirms == 0);
 
             UnspentCoins.Clear();
             UnspentCoins.AddRange(confirmed);

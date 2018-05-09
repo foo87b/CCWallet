@@ -17,13 +17,13 @@ namespace CCWallet.DiscordBot.Utilities.Insight
             BaseUri = new Uri(endpoint.TrimEnd('/'), UriKind.Absolute);
         }
 
-        public async Task<Dictionary<Coin, ulong>> GetUnspentCoinsAsync(BitcoinAddress address)
+        public async Task<IEnumerable<UnspentOutput.UnspentCoin>> GetUnspentCoinsAsync(BitcoinAddress address)
         {
             var builder = new UriBuilder(BaseUri);
             builder.Path += $"/addr/{address}/utxo";
             builder.Query = "noCache=1";
             
-            return (await FetchAsync<IList<UnspentOutput>>(builder.Uri)).ToDictionary(utxo => utxo.ToCoin(), utxo => utxo.Confirmations);
+            return (await FetchAsync<IList<UnspentOutput>>(builder.Uri)).Select(u => u.ToUnspentCoin());
         }
 
         public async Task BroadcastAsync(Transaction tx)
