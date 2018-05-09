@@ -26,6 +26,14 @@ namespace CCWallet.DiscordBot.Utilities.Insight
             return (await FetchAsync<IList<UnspentOutput>>(builder.Uri)).ToDictionary(utxo => utxo.ToCoin(), utxo => utxo.Confirmations);
         }
 
+        public async Task BroadcastAsync(Transaction tx)
+        {
+            var builder = new UriBuilder(BaseUri);
+            builder.Path += "/tx/send";
+
+            await PostAsync(builder.Uri, Broadcast.ConvertFrom(tx));
+        }
+
         private async Task<T> FetchAsync<T>(Uri uri) where T : class
         {
             var request = WebRequest.Create(uri);
@@ -37,6 +45,20 @@ namespace CCWallet.DiscordBot.Utilities.Insight
 
                 return serializer.ReadObject(stream) as T;
             }
+        }
+
+        private async Task<WebResponse> PostAsync<T>(Uri uri, T param) where T : class 
+        {
+            var request = WebRequest.Create(uri);
+            request.Method = WebRequestMethods.Http.Post;
+            request.ContentType = "application/json";
+
+            using (var stream = request.GetRequestStream())
+            {
+                new DataContractJsonSerializer(typeof(T)).WriteObject(stream, param);
+            }
+
+            return await request.GetResponseAsync();
         }
     }
 }

@@ -5,7 +5,9 @@ using NBitcoin;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace CCWallet.DiscordBot.Utilities
@@ -66,10 +68,38 @@ namespace CCWallet.DiscordBot.Utilities
 
             UnspentCoins.Clear();
             UnspentCoins.AddRange(confirmed);
-            
+
             PendingMoney = MoneyExtensions.Sum(pending.Select(c => c.Amount));
             ConfirmedMoney = MoneyExtensions.Sum(confirmed.Select(c => c.Amount));
             UnconfirmedMoney = MoneyExtensions.Sum(unconfirmed.Select(c => c.Amount));
+        }
+
+        public bool TryBroadcast(Transaction tx, out string error)
+        {
+            error = String.Empty;
+
+            try
+            {
+                Insight.BroadcastAsync(tx).Wait();
+
+                return true;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions.Count != 1 || !(e.InnerExceptions[0] is WebException))
+                {
+                    throw;
+                }
+
+                var response = ((WebException) e.InnerExceptions[0]).Response;
+                using (var stream = response.GetResponseStream())
+                using (var reader = new StreamReader(stream))
+                {
+                    error = reader.ReadToEnd();
+                }
+            }
+
+            return false;
         }
 
         private ExtKey GetExtKey(int account = 0, int change = 0, int index = 0)
