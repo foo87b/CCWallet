@@ -59,26 +59,33 @@ namespace CCWallet.DiscordBot.Utilities
 
         public Transaction BuildTransaction(IDestination destination, decimal amount)
         {
-            var builder = new TransactionBuilder()
+            var builder = new TransactionBuilder();
+            var tx = builder
                 .SetChange(Address)
                 .SetConsensusFactory(Network)
                 .AddKeys(GetExtKey().PrivateKey)
                 .AddCoins(UnspentCoins)
-                .Send(destination, Money.FromUnit(amount, MoneyUnit.BTC));
+                .Send(destination, ConvertMoney(amount))
+                .SendFees(Currency.CalculateFee(builder, UnspentCoins))
+                .BuildTransaction(true);
 
-            builder.SendFees(Currency.CalculateFee(builder, UnspentCoins));
-
-            return builder.BuildTransaction(true);
+            var result = Currency.VerifyTransaction(tx);
+            switch (result)
+            {
+                case TransactionCheckResult.Success: return tx;
+                case TransactionCheckResult.OutputTooLarge: throw new ArgumentException("Output is too large.");
+                case TransactionCheckResult.OutputTotalTooLarge: throw new ArgumentException("Total output is too large.");
+                default: throw new ArgumentException($"TransactionCheck Error: {result}");
+            }
         }
 
         public bool TryBroadcast(Transaction tx, out string error)
         {
-            error = String.Empty;
-
             try
             {
                 Insight.BroadcastAsync(tx).Wait();
 
+                error = String.Empty;
                 return true;
             }
             catch (AggregateException e)
@@ -97,6 +104,21 @@ namespace CCWallet.DiscordBot.Utilities
             }
 
             return false;
+        }
+
+        public Money GetFee(Transaction tx)
+        {
+            return tx.GetFee(UnspentCoins.ToArray());
+        }
+
+        public string FormatAmount(Money amount)
+        {
+            return Currency.FormatMoney(amount, Culture);
+        }
+
+        public string FormatAmount(decimal amount)
+        {
+            return FormatAmount(Money.FromUnit(amount, MoneyUnit.BTC));
         }
 
         private ExtKey GetExtKey(int account = 0, int change = 0, int index = 0)
@@ -123,6 +145,26 @@ namespace CCWallet.DiscordBot.Utilities
             // SLIP-0044: Registered coin types for BIP-0044
             // if not implementing BIP-0044 currency, use numbers above 0x70000000
             return Network.NetworkType == NetworkType.Mainnet ? Currency.BIP44CoinType : 0x00000001;
+        }
+
+        private Money ConvertMoney(decimal amount, bool check = true)
+        {
+            if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
+            {
+                throw new ArgumentOutOfRangeException("amount", "Too many decimal places.");
+            }
+
+            if (check && amount < Currency.MinAmount)
+            {
+                throw new ArgumentOutOfRangeException("amount", "Under the minimum amount.");
+            }
+
+            if (check && amount > Currency.MaxAmount)
+            {
+                throw new ArgumentOutOfRangeException("amount", "Exceed the maximum amount.");
+            }
+
+            return Money.FromUnit(amount, MoneyUnit.BTC);
         }
     }
 }
