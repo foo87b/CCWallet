@@ -262,7 +262,10 @@ namespace CCWallet.DiscordBot.Utilities
                     }
                 }
 
-                result.Add(coins.Where(c => c.Amount.CompareTo(target) > 0).OrderBy(c => c.Amount).First());
+                if (count < coins.Count())
+                {
+                    result.Add(coins.Where(c => c.Amount.CompareTo(target) > 0).OrderBy(c => c.Amount).First());
+                }
             }
 
             return result;
