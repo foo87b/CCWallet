@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CCWallet.DiscordBot.Utilities
 {
-    public class UserWallet
+    public class UserWallet : ICoinSelector
     {
         public IUser User { get; }
         public Network Network { get; }
@@ -31,7 +31,7 @@ namespace CCWallet.DiscordBot.Utilities
         private Money ConfirmedMoney { get; set; } = Money.Zero;
         private Money UnconfirmedMoney { get; set; } = Money.Zero;
 
-        private static Dictionary<(ulong, Network), HashSet<OutPoint>> UsedPrevOuts { get; } = new Dictionary<(ulong, Network), HashSet<OutPoint>>();
+        private static Dictionary<(ulong, Network), HashSet<OutPoint>> UnconfirmedOutPoints { get; } = new Dictionary<(ulong, Network), HashSet<OutPoint>>();
 
         public UserWallet(WalletService wallet, Network network, IUser user, ExtKey key)
         {
@@ -78,9 +78,11 @@ namespace CCWallet.DiscordBot.Utilities
 
         public Transaction BuildTransaction(IDestination destination, decimal amount)
         {
-            var builder = new TransactionBuilder();
+            var builder = Currency.GeTransactionBuilder();
+
             var tx = builder
                 .SetChange(Address)
+                .SetCoinSelector(this)
                 .SetConsensusFactory(Network)
                 .AddKeys(GetExtKey().PrivateKey)
                 .AddCoins(UnspentCoins)
@@ -189,32 +191,81 @@ namespace CCWallet.DiscordBot.Utilities
 
         private bool HasUnconfirmedOutPoint(ICoin coin)
         {
-            return UsedPrevOuts.ContainsKey((User.Id, Network))
-                ? UsedPrevOuts[(User.Id, Network)].Contains(coin.Outpoint)
+            return UnconfirmedOutPoints.ContainsKey((User.Id, Network))
+                ? UnconfirmedOutPoints[(User.Id, Network)].Contains(coin.Outpoint)
                 : false;
         }
 
         private void SetUnconfirmedOutPoints(IEnumerable<OutPoint> outPoints)
         {
-            if (!UsedPrevOuts.ContainsKey((User.Id, Network)))
+            if (!UnconfirmedOutPoints.ContainsKey((User.Id, Network)))
             {
-                UsedPrevOuts[(User.Id, Network)] = new HashSet<OutPoint>();
+                UnconfirmedOutPoints[(User.Id, Network)] = new HashSet<OutPoint>();
             }
 
-            UsedPrevOuts[(User.Id, Network)].UnionWith(outPoints.Where(o => !o.IsNull));
+            UnconfirmedOutPoints[(User.Id, Network)].UnionWith(outPoints.Where(o => !o.IsNull));
         }
 
         private void SetConfirmedOutPoints(IEnumerable<OutPoint> outPoints)
         {
-            if (UsedPrevOuts.ContainsKey((User.Id, Network)))
+            if (UnconfirmedOutPoints.ContainsKey((User.Id, Network)))
             {
-                UsedPrevOuts[(User.Id, Network)] = UsedPrevOuts[(User.Id, Network)].Intersect(outPoints.Where(o => !o.IsNull)).ToHashSet();
+                UnconfirmedOutPoints[(User.Id, Network)] = UnconfirmedOutPoints[(User.Id, Network)].Intersect(outPoints.Where(o => !o.IsNull)).ToHashSet();
 
-                if (UsedPrevOuts[(User.Id, Network)].Count == 0)
+                if (UnconfirmedOutPoints[(User.Id, Network)].Count == 0)
                 {
-                    UsedPrevOuts.Remove((User.Id, Network));
+                    UnconfirmedOutPoints.Remove((User.Id, Network));
                 }
             }
+        }
+
+        IEnumerable<ICoin> ICoinSelector.Select(IEnumerable<ICoin> coins, IMoney target)
+        {
+            var result = new HashSet<ICoin>();
+            var zero = target.Sub(target);
+
+            if (target.CompareTo(zero) > 0 && coins.Count() > 0)
+            {
+                var total = zero;
+                var lower = coins.Where(c => c.Amount.CompareTo(target) <= 0).OrderBy(c => c.Amount);
+                var count = lower.Count();
+
+                if (count > 0)
+                {
+                    for (var i = 0; i < count / 6; i++)
+                    {
+                        foreach (var c in lower.Skip(i * 5).Take(5))
+                        {
+                            total = total.Add(c.Amount);
+                            result.Add(c);
+                        }
+
+                        var tmp = lower.SkipLast(i).Last();
+                        total = total.Add(tmp.Amount);
+                        result.Add(tmp);
+
+                        if (total.CompareTo(target) >= 0)
+                        {
+                            return result;
+                        }
+                    }
+
+                    foreach (var c in lower.Skip(count / 6 * 5).Take(count % 6))
+                    {
+                        total = total.Add(c.Amount);
+                        result.Add(c);
+
+                        if (total.CompareTo(target) >= 0)
+                        {
+                            return result;
+                        }
+                    }
+                }
+
+                result.Add(coins.Where(c => c.Amount.CompareTo(target) > 0).OrderBy(c => c.Amount).First());
+            }
+
+            return result;
         }
     }
 }

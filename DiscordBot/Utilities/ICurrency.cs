@@ -17,6 +17,7 @@ namespace CCWallet.DiscordBot.Utilities
 
         string FormatMoney(Money money, CultureInfo culture, bool symbol = true);
         Money CalculateFee(TransactionBuilder builder, IEnumerable<UnspentOutput.UnspentCoin> unspnets);
+        TransactionBuilder GeTransactionBuilder();
         TransactionCheckResult VerifyTransaction(Transaction tx);
     }
 }

@@ -199,6 +199,16 @@ namespace CCWallet.DiscordBot.Currencies
             return fee >= 0 ? Money.Min(fee, XPCoinTransaction.MaxMoney) : XPCoinTransaction.MaxMoney;
         }
 
+        TransactionBuilder ICurrency.GeTransactionBuilder()
+        {
+            var builder = new TransactionBuilder()
+            {
+                DustPrevention = false,
+            };
+
+            return builder;
+        }
+
         TransactionCheckResult ICurrency.VerifyTransaction(Transaction tx)
         {
             return ((XPCoinTransaction) tx).Check();
