@@ -31,6 +31,8 @@ namespace CCWallet.DiscordBot.Utilities
         private Money ConfirmedMoney { get; set; } = Money.Zero;
         private Money UnconfirmedMoney { get; set; } = Money.Zero;
 
+        private static Dictionary<(ulong, Network), HashSet<OutPoint>> UsedPrevOuts { get; } = new Dictionary<(ulong, Network), HashSet<OutPoint>>();
+
         public UserWallet(WalletService wallet, Network network, IUser user, ExtKey key)
         {
             Network = network;
@@ -45,10 +47,27 @@ namespace CCWallet.DiscordBot.Utilities
         public async Task UpdateBalanceAsync()
         {
             var result = await Insight.GetUnspentCoinsAsync(Address);
-            var pending = result.Where(c => c.Confirms > 0 && c.Confirms < Currency.TransactionConfirms);
-            var confirmed = result.Where(c => c.Confirms >= Currency.TransactionConfirms);
-            var unconfirmed = result.Where(c => c.Confirms == 0);
+            var pending = new HashSet<UnspentOutput.UnspentCoin>();
+            var confirmed = new HashSet<UnspentOutput.UnspentCoin>();
+            var unconfirmed = new HashSet<UnspentOutput.UnspentCoin>();
 
+            SetConfirmedOutPoints(result.Select(c => c.Outpoint));
+            foreach (var coin in result)
+            {
+                if (HasUnconfirmedOutPoint(coin) || coin.Confirms == 0)
+                {
+                    unconfirmed.Add(coin);
+                }
+                else if (coin.Confirms < Currency.TransactionConfirms)
+                {
+                    pending.Add(coin);
+                }
+                else if (coin.Confirms >= Currency.TransactionConfirms)
+                {
+                    confirmed.Add(coin);
+                }
+            }
+            
             UnspentCoins.Clear();
             UnspentCoins.AddRange(confirmed);
 
@@ -84,6 +103,7 @@ namespace CCWallet.DiscordBot.Utilities
             try
             {
                 Insight.BroadcastAsync(tx).Wait();
+                SetUnconfirmedOutPoints(tx.Inputs.Select(i => i.PrevOut));
 
                 error = String.Empty;
                 return true;
@@ -165,6 +185,36 @@ namespace CCWallet.DiscordBot.Utilities
             }
 
             return Money.FromUnit(amount, MoneyUnit.BTC);
+        }
+
+        private bool HasUnconfirmedOutPoint(ICoin coin)
+        {
+            return UsedPrevOuts.ContainsKey((User.Id, Network))
+                ? UsedPrevOuts[(User.Id, Network)].Contains(coin.Outpoint)
+                : false;
+        }
+
+        private void SetUnconfirmedOutPoints(IEnumerable<OutPoint> outPoints)
+        {
+            if (!UsedPrevOuts.ContainsKey((User.Id, Network)))
+            {
+                UsedPrevOuts[(User.Id, Network)] = new HashSet<OutPoint>();
+            }
+
+            UsedPrevOuts[(User.Id, Network)].UnionWith(outPoints.Where(o => !o.IsNull));
+        }
+
+        private void SetConfirmedOutPoints(IEnumerable<OutPoint> outPoints)
+        {
+            if (UsedPrevOuts.ContainsKey((User.Id, Network)))
+            {
+                UsedPrevOuts[(User.Id, Network)] = UsedPrevOuts[(User.Id, Network)].Intersect(outPoints.Where(o => !o.IsNull)).ToHashSet();
+
+                if (UsedPrevOuts[(User.Id, Network)].Count == 0)
+                {
+                    UsedPrevOuts.Remove((User.Id, Network));
+                }
+            }
         }
     }
 }

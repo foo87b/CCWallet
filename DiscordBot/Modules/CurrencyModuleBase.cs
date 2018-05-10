@@ -67,6 +67,7 @@ namespace CCWallet.DiscordBot.Modules
                     new EmbedFieldBuilder().WithName(_("Balance")).WithValue(Wallet.TotalBalance),
                     new EmbedFieldBuilder().WithIsInline(true).WithName(_("Confirmed")).WithValue(Wallet.ConfirmedBalance),
                     new EmbedFieldBuilder().WithIsInline(true).WithName(_("Confirming")).WithValue(Wallet.PendingBalance),
+                    new EmbedFieldBuilder().WithIsInline(true).WithName(_("Unconfirmed")).WithValue(Wallet.UnconfirmedBalance),
                 },
             }));
         }
