@@ -173,17 +173,17 @@ namespace CCWallet.DiscordBot.Utilities
         {
             if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
             {
-                throw new ArgumentOutOfRangeException("amount", "Too many decimal places.");
+                throw new ArgumentOutOfRangeException(null, "Too many decimal places.");
             }
 
             if (check && amount < Currency.MinAmount)
             {
-                throw new ArgumentOutOfRangeException("amount", "Under the minimum amount.");
+                throw new ArgumentOutOfRangeException(null, "Under the minimum amount.");
             }
 
             if (check && amount > Currency.MaxAmount)
             {
-                throw new ArgumentOutOfRangeException("amount", "Exceed the maximum amount.");
+                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
             }
 
             return Money.FromUnit(amount, MoneyUnit.BTC);
