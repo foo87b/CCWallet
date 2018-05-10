@@ -140,7 +140,7 @@ namespace CCWallet.DiscordBot.Utilities
 
         public string FormatAmount(decimal amount)
         {
-            return FormatAmount(Money.FromUnit(amount, MoneyUnit.BTC));
+            return Currency.FormatAmount(amount, Culture);
         }
 
         private ExtKey GetExtKey(int account = 0, int change = 0, int index = 0)
@@ -171,9 +171,15 @@ namespace CCWallet.DiscordBot.Utilities
 
         private Money ConvertMoney(decimal amount, bool check = true)
         {
-            if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
+            // force overflow check.
+            if (amount > long.MaxValue / (decimal)Money.COIN)
             {
-                throw new ArgumentOutOfRangeException(null, "Too many decimal places.");
+                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
+            }
+
+            if (check && (amount > Currency.MaxAmount))
+            {
+                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
             }
 
             if (check && amount < Currency.MinAmount)
@@ -181,9 +187,9 @@ namespace CCWallet.DiscordBot.Utilities
                 throw new ArgumentOutOfRangeException(null, "Under the minimum amount.");
             }
 
-            if (check && amount > Currency.MaxAmount)
+            if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
             {
-                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
+                throw new ArgumentOutOfRangeException(null, "Too many decimal places.");
             }
 
             return Money.FromUnit(amount, MoneyUnit.BTC);

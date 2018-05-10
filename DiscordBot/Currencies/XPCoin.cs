@@ -178,10 +178,15 @@ namespace CCWallet.DiscordBot.Currencies
                 .AddAlias("xpcoin-reg")
                 .AddAlias("xpcoin-regtest");
         }
-        
+
         string ICurrency.FormatMoney(Money money, CultureInfo culture, bool symbol)
         {
-            return money.ToDecimal(MoneyUnit.BTC).ToString("N6", culture) + (symbol ? $" {CryptoCode}" : string.Empty);
+            return ((ICurrency) this).FormatAmount(money.ToDecimal(MoneyUnit.BTC), culture, symbol);
+        }
+
+        string ICurrency.FormatAmount(decimal amount, CultureInfo culture, bool symbol)
+        {
+            return amount.ToString("N6", culture) + (symbol ? $" {CryptoCode}" : string.Empty);
         }
 
         Money ICurrency.CalculateFee(TransactionBuilder builder, IEnumerable<UnspentOutput.UnspentCoin> unspents)
