@@ -18,6 +18,7 @@ namespace CCWallet.DiscordBot.Translations
 
                 // Embed Field
                 {"To", new[]{"送付先"} },
+                {"Fee", new[]{"手数料"} },
                 {"From", new[]{"送付元"} },
                 {"Amount", new[]{"送付量"} },
                 {"Result", new[]{"結果"} },
