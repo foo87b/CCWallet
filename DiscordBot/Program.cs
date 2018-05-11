@@ -66,8 +66,8 @@ namespace CCWallet.DiscordBot
         {
             var culture = ServiceProvider.GetRequiredService<Services.CultureService>();
 
-            culture.AddLocale<Translations.ja>();
-            culture.AddLocale<Translations.kr>();
+            culture.AddTranslation<Translations.ja>();
+            culture.AddTranslation<Translations.kr>();
         }
 
         private static void SetupWalletService()

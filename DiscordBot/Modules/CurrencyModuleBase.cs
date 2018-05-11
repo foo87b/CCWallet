@@ -8,7 +8,6 @@ using NBitcoin;
 using NGettext;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 
 namespace CCWallet.DiscordBot.Modules
@@ -18,7 +17,7 @@ namespace CCWallet.DiscordBot.Modules
         protected IServiceProvider Provider { get; }
         protected UserWallet Wallet { get; set; }
         protected abstract Network Network { get; }
-        protected virtual ICatalog Catalog { get; set; }
+        protected virtual Catalog Catalog { get; set; }
 
         protected CurrencyModuleBase(IServiceProvider provider)
         {
@@ -28,11 +27,11 @@ namespace CCWallet.DiscordBot.Modules
         protected override void BeforeExecute(CommandInfo command)
         {
             var wallet = Provider.GetService<WalletService>();
-            var culture = CultureInfo.CurrentCulture;
+            var culture = Provider.GetService<CultureService>();
 
+            Catalog = culture.GetCatalog(Context.Channel);
             Wallet = wallet.GetUserWallet(Network, Context.User);
-            Wallet.CultureInfo = culture;
-            Catalog = Provider.GetService<CultureService>().GetCatalog(culture);
+            Wallet.CultureInfo = Catalog.CultureInfo;
         }
 
         [Command(BotCommand.Help)]
