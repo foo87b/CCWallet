@@ -58,7 +58,6 @@ namespace CCWallet.DiscordBot
             Task.WaitAll(new[]
             {
                 command.AddCommandService("!xp").AddModuleAsync<Modules.XPCoinModule>(),
-                command.AddCommandService("!debug").AddModuleAsync<Modules.DebugModule>(),
             });
         }
 
