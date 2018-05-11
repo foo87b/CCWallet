@@ -18,14 +18,15 @@ namespace CCWallet.DiscordBot.Utilities
         public Network Network { get; }
         public ICurrency Currency { get; }
         public InsightClient Insight { get; }
-        public BitcoinAddress Address { get; }
-        public CultureInfo Culture { get; set; } = CultureInfo.CurrentCulture;
-        public string TotalBalance => Currency.FormatMoney(PendingMoney + ConfirmedMoney, Culture);
-        public string PendingBalance => Currency.FormatMoney(PendingMoney, Culture);
-        public string ConfirmedBalance => Currency.FormatMoney(ConfirmedMoney, Culture);
-        public string UnconfirmedBalance => Currency.FormatMoney(UnconfirmedMoney, Culture);
+        public CultureInfo CultureInfo { get; set; } = CultureInfo.CurrentCulture;
+        public BitcoinAddress Address => ScriptPubKey.GetDestinationAddress(Network);
+        public string TotalBalance => FormatMoney(PendingMoney + ConfirmedMoney);
+        public string PendingBalance => FormatMoney(PendingMoney);
+        public string ConfirmedBalance => FormatMoney(ConfirmedMoney);
+        public string UnconfirmedBalance => FormatMoney(UnconfirmedMoney);
 
         private ExtKey ExtKey { get; }
+        private Script ScriptPubKey { get; }
         private List<UnspentOutput.UnspentCoin> UnspentCoins { get; } = new List<UnspentOutput.UnspentCoin>();
         private Money PendingMoney { get; set; } = Money.Zero;
         private Money ConfirmedMoney { get; set; } = Money.Zero;
@@ -41,7 +42,7 @@ namespace CCWallet.DiscordBot.Utilities
 
             User = user;
             ExtKey = key;
-            Address = GetExtKey().ScriptPubKey.GetDestinationAddress(network);
+            ScriptPubKey = GetExtKey().ScriptPubKey;
         }
 
         public async Task UpdateBalanceAsync()
@@ -104,28 +105,23 @@ namespace CCWallet.DiscordBot.Utilities
         {
             try
             {
+                error = String.Empty;
                 Insight.BroadcastAsync(tx).Wait();
                 SetUnconfirmedOutPoints(tx.Inputs.Select(i => i.PrevOut));
 
-                error = String.Empty;
                 return true;
             }
-            catch (AggregateException e)
+            catch (AggregateException e) when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is WebException)
             {
-                if (e.InnerExceptions.Count != 1 || !(e.InnerExceptions[0] is WebException))
-                {
-                    throw;
-                }
-
                 var response = ((WebException) e.InnerExceptions[0]).Response;
                 using (var stream = response.GetResponseStream())
                 using (var reader = new StreamReader(stream))
                 {
                     error = reader.ReadToEnd();
                 }
-            }
 
-            return false;
+                return false;
+            }
         }
 
         public Money GetFee(Transaction tx)
@@ -133,14 +129,14 @@ namespace CCWallet.DiscordBot.Utilities
             return tx.GetFee(UnspentCoins.ToArray());
         }
 
-        public string FormatAmount(Money amount)
+        public string FormatMoney(Money money)
         {
-            return Currency.FormatMoney(amount, Culture);
+            return Currency.FormatMoney(money, CultureInfo);
         }
 
         public string FormatAmount(decimal amount)
         {
-            return Currency.FormatAmount(amount, Culture);
+            return Currency.FormatAmount(amount, CultureInfo);
         }
 
         private ExtKey GetExtKey(int account = 0, int change = 0, int index = 0)
@@ -152,7 +148,7 @@ namespace CCWallet.DiscordBot.Utilities
         private KeyPath GetKeyPath(int purpose = 44, int type = 0, int account = 0, int change = 0, int index = 0)
         {
             // BIP-0044: Multi-Account Hierarchy for Deterministic Wallets
-            return new KeyPath(new uint[]
+            return new KeyPath(new []
             {
                 0x80000000 | Convert.ToUInt32(purpose),
                 0x80000000 | Convert.ToUInt32(type),

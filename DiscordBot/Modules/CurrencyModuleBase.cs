@@ -16,11 +16,9 @@ namespace CCWallet.DiscordBot.Modules
     public abstract class CurrencyModuleBase : ModuleBase
     {
         protected IServiceProvider Provider { get; }
-        protected ICurrency Currency { get; set; }
         protected UserWallet Wallet { get; set; }
         protected abstract Network Network { get; }
         protected virtual ICatalog Catalog { get; set; }
-        protected virtual CultureInfo CultureInfo { get; set; } = CultureInfo.CurrentCulture;
 
         protected CurrencyModuleBase(IServiceProvider provider)
         {
@@ -30,11 +28,11 @@ namespace CCWallet.DiscordBot.Modules
         protected override void BeforeExecute(CommandInfo command)
         {
             var wallet = Provider.GetService<WalletService>();
+            var culture = CultureInfo.CurrentCulture;
 
             Wallet = wallet.GetUserWallet(Network, Context.User);
-            Wallet.Culture = CultureInfo;
-            Currency = wallet.GetCurrency(Network);
-            Catalog = Provider.GetService<CultureService>().GetCatalog(CultureInfo);
+            Wallet.CultureInfo = culture;
+            Catalog = Provider.GetService<CultureService>().GetCatalog(culture);
         }
 
         [Command(BotCommand.Help)]
@@ -52,7 +50,7 @@ namespace CCWallet.DiscordBot.Modules
         {
             await Wallet.UpdateBalanceAsync();
 
-            await ReplySuccessAsync(_("Your {0} balance.", Currency.Name), CreateEmbed(new EmbedBuilder()
+            await ReplySuccessAsync(_("Your {0} balance.", Wallet.Currency.Name), CreateEmbed(new EmbedBuilder()
             {
                 Color = Color.DarkPurple,
                 Title = _("Balance"),
@@ -77,7 +75,7 @@ namespace CCWallet.DiscordBot.Modules
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
         public virtual async Task CommandDepositAsync()
         {
-            await ReplySuccessAsync(_("Your {0} deposit address.", Currency.Name), CreateEmbed(new EmbedBuilder()
+            await ReplySuccessAsync(_("Your {0} deposit address.", Wallet.Currency.Name), CreateEmbed(new EmbedBuilder()
             {
                 Color = Color.DarkBlue,
                 Title = _("Deposit Address"),
@@ -154,7 +152,7 @@ namespace CCWallet.DiscordBot.Modules
 
             if (tx != null)
             {
-                builder.AddField(_("Fee"), Wallet.FormatAmount(Wallet.GetFee(tx)), true);
+                builder.AddField(_("Fee"), Wallet.FormatMoney(Wallet.GetFee(tx)), true);
                 builder.AddField(_("Transaction"), tx.GetHash());
             }
 
@@ -163,22 +161,22 @@ namespace CCWallet.DiscordBot.Modules
                 builder.Color = Color.DarkerGrey;
                 builder.Description = String.Join("\n", new[]
                 {
-                    _("Sent {0}.", Currency.Name),
+                    _("Sent {0}.", Wallet.Currency.Name),
                     _("It will take some time until approved by the network, please check with the Blockchain Explorer."),
                 });
 
-                await ReplySuccessAsync(_("Sent {0}.", Currency.Name), CreateEmbed(builder));
+                await ReplySuccessAsync(_("Sent {0}.", Wallet.Currency.Name), CreateEmbed(builder));
             }
             else
             {
                 builder.Color = Color.Red;
                 builder.Description = String.Join("\n", new[]
                 {
-                    _("Failed to send {0}.", Currency.Name),
+                    _("Failed to send {0}.", Wallet.Currency.Name),
                     error,
                 });
 
-                await ReplyFailureAsync(_("Failed to send {0}.", Currency.Name), CreateEmbed(builder));
+                await ReplyFailureAsync(_("Failed to send {0}.", Wallet.Currency.Name), CreateEmbed(builder));
             }
         }
 
@@ -235,12 +233,12 @@ namespace CCWallet.DiscordBot.Modules
             return (embed ?? new EmbedBuilder())
                 .WithAuthor(new EmbedAuthorBuilder()
                 {
-                    Name = _("{0} Wallet", Currency.Name),
-                    IconUrl = Currency.IconUrl,
+                    Name = _("{0} Wallet", Wallet.Currency.Name),
+                    IconUrl = Wallet.Currency.IconUrl,
                 })
                 .WithFooter(new EmbedFooterBuilder()
                 {
-                    Text = _("CCWallet ({0} Module)", Currency.Name),
+                    Text = _("CCWallet ({0} Module)", Wallet.Currency.Name),
                     IconUrl = Context.Client.CurrentUser.GetAvatarUrl(),
                 })
                 .WithThumbnailUrl(Context.User.GetAvatarUrl())
