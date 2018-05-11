@@ -5,7 +5,6 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using NGettext;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,23 +13,14 @@ namespace CCWallet.DiscordBot.Modules
 {
     public abstract class CurrencyModuleBase : ModuleBase
     {
-        protected IServiceProvider Provider { get; }
-        protected UserWallet Wallet { get; set; }
+        protected UserWallet Wallet { get; private set; }
         protected abstract Network Network { get; }
-        protected virtual Catalog Catalog { get; set; }
-
-        protected CurrencyModuleBase(IServiceProvider provider)
-        {
-            Provider = provider;
-        }
 
         protected override void BeforeExecute(CommandInfo command)
         {
-            var wallet = Provider.GetService<WalletService>();
-            var culture = Provider.GetService<CultureService>();
-
-            Catalog = culture.GetCatalog(Context.Channel);
-            Wallet = wallet.GetUserWallet(Network, Context.User);
+            base.BeforeExecute(command);
+            
+            Wallet = Provider.GetService<WalletService>().GetUserWallet(Network, Context.User);
             Wallet.CultureInfo = Catalog.CultureInfo;
         }
 
@@ -120,24 +110,6 @@ namespace CCWallet.DiscordBot.Modules
             TryTransfer(GetAddress(user), amount, out var tx, out var error);
 
             await ReplyTransferAsync(builder, tx, GetName(user), amount, error);
-        }
-
-        protected virtual async Task ReplySuccessAsync(string message, Embed embed = null)
-        {
-            await Task.WhenAll(new List<Task>()
-            {
-                Context.Message.AddReactionAsync(BotReaction.Success),
-                ReplyAsync($"{Context.User.Mention} {message}", false, embed),
-            });
-        }
-
-        protected virtual async Task ReplyFailureAsync(string message, Embed embed = null)
-        {
-            await Task.WhenAll(new List<Task>()
-            {
-                Context.Message.AddReactionAsync(BotReaction.Failure),
-                ReplyAsync($"{Context.User.Mention} {message}", false, embed),
-            });
         }
         
         protected virtual async Task ReplyTransferAsync(EmbedBuilder builder, Transaction tx, string destination, decimal amount, string error)
@@ -256,16 +228,6 @@ namespace CCWallet.DiscordBot.Modules
         protected virtual BitcoinAddress GetAddress(IUser user)
         {
             return Provider.GetService<WalletService>().GetUserWallet(Network, user).Address;
-        }
-
-        protected virtual string _(string text)
-        {
-            return Catalog.GetString(text);
-        }
-
-        protected virtual string _(string text, params object[] args)
-        {
-            return Catalog.GetString(text, args);
         }
     }
 }
