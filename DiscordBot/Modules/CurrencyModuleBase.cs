@@ -37,6 +37,7 @@ namespace CCWallet.DiscordBot.Modules
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
         public virtual async Task CommandBalanceAsync()
         {
+            await Context.Channel.TriggerTypingAsync();
             await Wallet.UpdateBalanceAsync();
 
             await ReplySuccessAsync(_("Your {0} balance.", Wallet.Currency.Name), CreateEmbed(new EmbedBuilder()
@@ -64,6 +65,7 @@ namespace CCWallet.DiscordBot.Modules
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
         public virtual async Task CommandDepositAsync()
         {
+            await Context.Channel.TriggerTypingAsync();
             await ReplySuccessAsync(_("Your {0} deposit address.", Wallet.Currency.Name), CreateEmbed(new EmbedBuilder()
             {
                 Color = Color.DarkBlue,
@@ -85,15 +87,14 @@ namespace CCWallet.DiscordBot.Modules
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
         public virtual async Task CommandWithdrawAsync(string address, decimal amount)
         {
-            var builder = new EmbedBuilder()
-            {
-                Title = _("Withdraw"),
-            };
-
+            await Context.Channel.TriggerTypingAsync();
             await Wallet.UpdateBalanceAsync();
             TryTransfer(address, amount, out var tx, out var error);
 
-            await ReplyTransferAsync(builder, tx, address, amount, error);
+            await ReplyTransferAsync(new EmbedBuilder()
+            {
+                Title = _("Withdraw"),
+            }, tx, address, amount, error);
         }
 
         [Command(BotCommand.Tip)]
@@ -101,15 +102,14 @@ namespace CCWallet.DiscordBot.Modules
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
         public virtual async Task CommandTipAsync(IUser user, decimal amount)
         {
-            var builder = new EmbedBuilder()
-            {
-                Title = _("Tip"),
-            };
-
+            await Context.Channel.TriggerTypingAsync();
             await Wallet.UpdateBalanceAsync();
             TryTransfer(GetAddress(user), amount, out var tx, out var error);
 
-            await ReplyTransferAsync(builder, tx, GetName(user), amount, error);
+            await ReplyTransferAsync(new EmbedBuilder()
+            {
+                Title = _("Tip"),
+            }, tx, GetName(user), amount, error);
         }
         
         protected virtual async Task ReplyTransferAsync(EmbedBuilder builder, Transaction tx, string destination, decimal amount, string error)
@@ -212,7 +212,7 @@ namespace CCWallet.DiscordBot.Modules
                     Text = _("CCWallet ({0} Module)", Wallet.Currency.Name),
                     IconUrl = Context.Client.CurrentUser.GetAvatarUrl(),
                 })
-                .WithThumbnailUrl(Context.User.GetAvatarUrl())
+                .WithThumbnailUrl(GetAvatarUrl(Context.User))
                 .WithCurrentTimestamp()
                 .Build();
         }
@@ -223,6 +223,13 @@ namespace CCWallet.DiscordBot.Modules
             var nick = (user as IGuildUser)?.Nickname;
 
             return nick != null ? $"{nick} ({full})" : full;
+        }
+
+        protected virtual string GetAvatarUrl(IUser user)
+        {
+            return String.IsNullOrEmpty(user.AvatarId)
+                ? $"{DiscordConfig.CDNUrl}embed/avatars/{user.DiscriminatorValue % 5}.png"
+                : user.GetAvatarUrl();
         }
 
         protected virtual BitcoinAddress GetAddress(IUser user)
