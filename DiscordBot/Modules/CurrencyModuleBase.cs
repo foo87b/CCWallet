@@ -66,7 +66,11 @@ namespace CCWallet.DiscordBot.Modules
         public virtual async Task CommandDepositAsync()
         {
             await Context.Channel.TriggerTypingAsync();
-            await ReplySuccessAsync(_("Your {0} deposit address.", Wallet.Currency.Name), CreateEmbed(new EmbedBuilder()
+            await ReplySuccessAsync(String.Join("\n", new[]
+            {
+                _("Your {0} address.", Wallet.Currency.Name),
+                Wallet.Address.ToString(),
+            }), CreateEmbed(new EmbedBuilder()
             {
                 Color = Color.DarkBlue,
                 Title = _("Deposit Address"),
