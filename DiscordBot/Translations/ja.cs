@@ -23,7 +23,7 @@ namespace CCWallet.DiscordBot.Translations
                 {"Amount", new[]{"送付量"} },
                 {"Result", new[]{"結果"} },
                 {"Success", new[]{"成功"} },
-                {"Failure", new[]{"失敗"} },
+                {"Failed", new[]{"失敗"} },
                 {"Owner", new[]{"所有者"} },
                 {"Confirmed", new []{"検証済"} },
                 {"Confirming", new []{"検証中"} },
@@ -33,27 +33,27 @@ namespace CCWallet.DiscordBot.Translations
                 // Using: BotCommand.Balance
                 {"Your {0} balance.", new []{"あなたの{0}の残高です。"} },
                 {"Only confirmed balances are available.", new []{"検証済の分のみ使用することが出来ます。"} },
-                {"There may be some errors in the balance due to network conditions.", new []{ "ネットワーク状況により残高に多少の誤差が出る場合があります。" } },
+                {"Slight balance errors may occur due to network conditions.", new []{ "ネットワーク状況により残高に多少の誤差が出る場合があります。" } },
 
                 // Using: BotCommand.Deposit
-                {"Your {0} deposit address.", new []{"あなたの{0}の預入先です。"} },
-                {"Your deposit address is {0}", new []{ "あなたの預入用のアドレスは {0} です。" } },
+                {"Your {0} address.", new []{"あなたの{0}の預入先です。"} },
+                {"Your deposit address is {0}.", new []{ "あなたの預入用のアドレスは {0} です。" } },
 
                 // Using: BotCommand.Withdraw
                 // Using: BotCommand.Tip
                 {"Sent {0}.", new []{ "{0}を送付しました。" } },
                 {"Failed to send {0}.", new []{ "{0}の送付に失敗しました。" } },
-                {"It will take some time until approved by the network, please check with the Blockchain Explorer.", new []{ "ネットワークに承認されるまで少し時間を要します。ブロックチェーンエクスプローラー等も併せてご確認ください。" } },
+                {"It may take some time to receive an approved message from the network; you can also check the status with the Blockchain Explorer.", new []{ "ネットワークに承認されるまで少し時間を要します。ブロックチェーンエクスプローラー等も併せてご確認ください。" } },
 
                 // Transaction Errors
-                {"Too many decimal places.", new []{ "小数点以下が細かすぎます。" } },
-                {"Under the minimum amount.", new []{ "送付可能な最低量を下回っています。" } },
+                {"Too many numbers after decimal point places.", new []{ "小数点以下が細かすぎます。" } },
+                {"Lower than the minimum transferable amount.", new []{ "送付可能な最低量を下回っています。" } },
                 {"Exceed the maximum amount.", new []{ "送付可能な最大量を上回っています。" } },
-                {"It seems to be invalid address.", new []{ "指定したアドレスが間違っているようです。" } },
-                {"It seems to be invalid amount. {0}", new []{ "指定した送付量に問題があるようです。 {0}" } },
-                {"It seems to be insufficient funds.", new []{ "ウォレットの残高が不足しているようです。" } },
-                {"Transaction could not be generated due to an error. {0}", new []{ "トランザクションの生成に失敗しました。 {0}" } },
-                {"Transaction could not be broadcast due to an error. {0}", new []{ "トランザクションの送信に失敗しました。 {0}" } },
+                {"Invalid address.", new []{ "指定したアドレスが間違っているようです。" } },
+                {"Invalid amount. {0}", new []{ "指定した送付量に問題があるようです。 {0}" } },
+                {"Insufficient funds.", new []{ "ウォレットの残高が不足しているようです。" } },
+                {"Error - Transaction generation failed. {0}", new []{ "トランザクションの生成に失敗しました。 {0}" } },
+                {"Error - Transaction transmission failed. {0}", new []{ "トランザクションの送信に失敗しました。 {0}" } },
 
             };
         }

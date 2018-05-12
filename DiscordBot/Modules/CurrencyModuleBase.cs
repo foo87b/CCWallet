@@ -47,7 +47,7 @@ namespace CCWallet.DiscordBot.Modules
                 Description = String.Join("\n", new[]
                 {
                     _("Only confirmed balances are available."),
-                    _("There may be some errors in the balance due to network conditions."),
+                    _("Slight balance errors may occur due to network conditions."),
                 }),
                 Fields = new List<EmbedFieldBuilder>
                 {
@@ -76,7 +76,7 @@ namespace CCWallet.DiscordBot.Modules
                 Title = _("Deposit Address"),
                 Description = String.Join("\n", new[]
                 {
-                    _("Your deposit address is {0}", Wallet.Address),
+                    _("Your deposit address is {0}.", Wallet.Address),
                 }),
                 Fields = new List<EmbedFieldBuilder>
                 {
@@ -120,7 +120,7 @@ namespace CCWallet.DiscordBot.Modules
         {
             var result = error == String.Empty;
 
-            builder.AddField(_("Result"), result ? _("Success") : _("Failure"));
+            builder.AddField(_("Result"), result ? _("Success") : _("Failed"));
             builder.AddField(_("From"), GetName(Context.User));
             builder.AddField(_("To"), destination);
             builder.AddField(_("Amount"), Wallet.FormatAmount(amount), true);
@@ -137,7 +137,7 @@ namespace CCWallet.DiscordBot.Modules
                 builder.Description = String.Join("\n", new[]
                 {
                     _("Sent {0}.", Wallet.Currency.Name),
-                    _("It will take some time until approved by the network, please check with the Blockchain Explorer."),
+                    _("It may take some time to receive an approved message from the network; you can also check the status with the Blockchain Explorer."),
                 });
 
                 await ReplySuccessAsync(_("Sent {0}.", Wallet.Currency.Name), CreateEmbed(builder));
@@ -163,7 +163,7 @@ namespace CCWallet.DiscordBot.Modules
             }
             catch (FormatException)
             {
-                error = _("It seems to be invalid address.");
+                error = _("Invalid address.");
             }
 
             tx = null;
@@ -183,19 +183,19 @@ namespace CCWallet.DiscordBot.Modules
                     return true;
                 }
 
-                error = _("Transaction could not be broadcast due to an error. {0}", _(result));
+                error = _("Error - Transaction transmission failed. {0}", _(result));
             }
             catch (NotEnoughFundsException)
             {
-                error = _("It seems to be insufficient funds.");
+                error = _("Insufficient funds.");
             }
             catch (ArgumentOutOfRangeException e)
             {
-                error = _("It seems to be invalid amount. {0}", _(e.Message));
+                error = _("Invalid amount. {0}", _(e.Message));
             }
             catch (ArgumentException e)
             {
-                error = _("Transaction could not be generated due to an error. {0}", _(e.Message));
+                error = _("Error - Transaction generation failed. {0}", _(e.Message));
             }
 
             tx = null;
