@@ -4,9 +4,9 @@ using System.Globalization;
 
 namespace CCWallet.DiscordBot.Translations
 {
-    public class kr : Catalog
+    public class ko : Catalog
     {
-        public kr() : base(new CultureInfo("kr"))
+        public ko() : base(new CultureInfo("ko"))
         {
             Translations = new Dictionary<string, string[]>
             {
@@ -18,11 +18,12 @@ namespace CCWallet.DiscordBot.Translations
 
                 // Embed Field
                 {"To", new[]{"To"} },
+                {"Fee", new[]{"수수료"} },
                 {"From", new[]{"From"} },
                 {"Amount", new[]{"수량"} },
                 {"Result", new[]{"결과"} },
                 {"Success", new[]{"성공"} },
-                {"Failede", new[]{"실패"} },
+                {"Failed", new[]{"실패"} },
                 {"Owner", new[]{"소유자"} },
                 {"Confirmed", new []{"승인됨"} },
                 {"Confirming", new []{"승인 진행중"} },
