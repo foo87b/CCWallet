@@ -21,6 +21,7 @@ namespace CCWallet.DiscordBot.Services
         private Dictionary<string, Task> Jobs { get; } = new Dictionary<string, Task>();
         private Dictionary<string, CommandService> Services { get; } = new Dictionary<string, CommandService>();
         private Dictionary<string, BlockingCollection<CommandInfo>> Queues { get; } = new Dictionary<string, BlockingCollection<CommandInfo>>();
+        private Dictionary<ulong, ulong> RecentUsers { get; } = new Dictionary<ulong, ulong>();
 
         internal struct CommandInfo
         {
@@ -143,17 +144,45 @@ namespace CCWallet.DiscordBot.Services
         private async Task OnMessageReceived(SocketMessage arg)
         {
             var result = ParseCommand(arg as SocketUserMessage);
-            
+
             if (result.HasValue)
             {
                 if (result.Value.SearchResult.IsSuccess)
                 {
-                    await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
+                    Boolean isLimited = false;
+                    List<ulong> toRemove = new List<ulong>();
+                    ulong removeThreshold = (arg.Id >> 22) - 60000;
 
-                    if (!TryEnqueue(result.Value))
+                    foreach (KeyValuePair<ulong, ulong> entry in RecentUsers)
                     {
-                        await result.Value.Context.Message.RemoveReactionAsync(BotReaction.InProgress, Discord.CurrentUser);
-                        await result.Value.Context.Message.AddReactionAsync(BotReaction.Error);
+                        if ((entry.Key >> 22) < removeThreshold)
+                        {
+                            toRemove.Add(entry.Key);
+                        }
+                        else if (entry.Value == arg.Author.Id)
+                        {
+                            isLimited = true;
+                        }
+                    }
+                    foreach(ulong key in toRemove)
+                    {
+                        RecentUsers.Remove(key);
+                    }
+
+                    if (isLimited)
+                    {
+                        await result.Value.Context.Message.AddReactionAsync(BotReaction.RateLimited);
+                    }
+                    else
+                    {
+                        RecentUsers.Add(arg.Id, arg.Author.Id);
+                        await result.Value.Context.Message.AddReactionAsync(BotReaction.InProgress);
+
+                        if (!TryEnqueue(result.Value))
+                        {
+                            await result.Value.Context.Message.RemoveReactionAsync(BotReaction.InProgress, Discord.CurrentUser);
+                            await result.Value.Context.Message.AddReactionAsync(BotReaction.Error);
+                        }
                     }
                 }
                 else

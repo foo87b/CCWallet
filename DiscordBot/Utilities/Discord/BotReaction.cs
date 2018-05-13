@@ -10,5 +10,6 @@ namespace CCWallet.DiscordBot.Utilities.Discord
         public static readonly Emoji Unknown    = new Emoji("\u2753");     // U+2753  is :question:
         public static readonly Emoji Failure    = new Emoji("\u274e");     // U+274E  is :negative_squared_cross_mark:
         public static readonly Emoji Success    = new Emoji("\u2705");     // U+2705  is :white_check_mark:
+        public static readonly Emoji RateLimited  = new Emoji("\u23f1");     // U+23F1  is :stopwatch:
     }
 }
