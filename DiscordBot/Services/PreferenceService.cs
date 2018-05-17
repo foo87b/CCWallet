@@ -101,6 +101,10 @@ namespace CCWallet.DiscordBot.Services
                     endpoint.Path += $"/user/{preference.GetHashKey()}";
                     break;
 
+                case AWSLambda.Entities.CommandLog _:
+                    endpoint.Path += $"/log/{preference.GetHashKey()}";
+                    break;
+
                 default:
                     throw new ArgumentException();
             }

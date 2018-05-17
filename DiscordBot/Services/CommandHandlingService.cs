@@ -1,6 +1,8 @@
 ﻿using CCWallet.DiscordBot.Utilities.Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -118,19 +120,60 @@ namespace CCWallet.DiscordBot.Services
                     if (TryDequeue(prefix, out var command))
                     {
                         var result = await command.Service.ExecuteAsync(command.Context, command.Input, ServiceProvider);
+                        var log = new AWSLambda.Entities.CommandLog()
+                        {
+                            MessageId = command.Context.Message.Id,
+                            ChannelType = -1,
+                            Prefix = command.Prefix,
+                            Module = command.Module,
+                            Command = command.Command,
+                            Input = command.Input,
+                            ErrorReason = result.ErrorReason,
+                        };
+
+                        switch (command.Context.Channel)
+                        {
+                            case IGuildChannel _:
+                                log.ChannelType = 0;
+                                break;
+
+                            case IDMChannel _:
+                                log.ChannelType = 1;
+                                break;
+
+                            case IGroupChannel _:
+                                log.ChannelType = 3;
+                                break;
+                        }
+
 
                         if (result.Error == CommandError.Exception)
                         {
                             await command.Context.Message.AddReactionAsync(BotReaction.Error);
+
+                            PushLog(log);
                         }
                         else if (!result.IsSuccess)
                         {
                             await command.Context.Message.AddReactionAsync(BotReaction.Unknown);
                         }
+                        else
+                        {
+                            PushLog(log);
+                        }
                     }
                 }
             }
             catch (OperationCanceledException) { }
+        }
+
+        private async Task PushLog(AWSLambda.Entities.CommandLog log)
+        {
+            try
+            {
+                await Task.Run(() => ServiceProvider.GetService<PreferenceService>().Update(log));
+            }
+            catch (Exception) { /* nothing */ }
         }
 
         private async Task OnReady()

@@ -27,6 +27,9 @@ namespace CCWallet.AWSLambda
                 case "user":
                     return await OptionResourceAsync<UserPreference>(request);
 
+                case "log":
+                    return await OptionResourceAsync<CommandLog>(request);
+
                 default:
                     throw new NotSupportedException();
             }
