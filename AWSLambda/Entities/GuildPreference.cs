@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace CCWallet.AWSLambda.Entities
 {
     [DataContract, DynamoDBTable("ccwallet.preference_guilds")]
-    public class GuildPreference : IPreference
+    public class GuildPreference : IDynamoTable
     {
         [DataMember, DynamoDBHashKey("id")]
         public virtual ulong GuildId { get; set; }

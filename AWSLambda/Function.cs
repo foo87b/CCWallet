@@ -32,7 +32,7 @@ namespace CCWallet.AWSLambda
             }
         }
 
-        private static async Task<APIGatewayProxyResponse> OptionResourceAsync<T>(APIGatewayProxyRequest request) where T : class, IPreference
+        private static async Task<APIGatewayProxyResponse> OptionResourceAsync<T>(APIGatewayProxyRequest request) where T : class, IDynamoTable
         {
             var id = UInt64.Parse(request.PathParameters["id"]);
             var since = request.QueryStringParameters?.ContainsKey("since") ?? false ? UInt64.Parse(request.QueryStringParameters["since"]) : 0;

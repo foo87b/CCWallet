@@ -83,7 +83,7 @@ namespace CCWallet.DiscordBot.Services
             return UserCaches[id];
         }
 
-        public void Update<T>(T preference) where T : class, AWSLambda.Entities.IPreference
+        public void Update<T>(T preference) where T : class, AWSLambda.Entities.IDynamoTable
         {
             var endpoint = new UriBuilder(BaseUri);
 

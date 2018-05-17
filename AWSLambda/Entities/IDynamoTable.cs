@@ -1,6 +1,6 @@
 ﻿namespace CCWallet.AWSLambda.Entities
 {
-    public interface IPreference
+    public interface IDynamoTable
     {
         ulong GetHashKey();
     }
