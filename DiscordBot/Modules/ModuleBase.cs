@@ -36,7 +36,7 @@ namespace CCWallet.DiscordBot.Modules
 
             if (remaind)
             {
-                culture.SetLanguage(Context.Channel, lang);
+                culture.SetLanguage(Context.Channel, Context.Message, lang);
             }
 
             Catalog = culture.GetCatalog(lang);

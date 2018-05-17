@@ -44,6 +44,7 @@ namespace CCWallet.DiscordBot
                 .AddSingleton<Services.CommandHandlingService>()
                 .AddSingleton<Services.ConfigureService>()
                 .AddSingleton<Services.CultureService>()
+                .AddSingleton<Services.PreferenceService>()
                 .AddSingleton<Services.WalletService>()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {

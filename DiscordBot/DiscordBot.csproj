@@ -22,4 +22,8 @@
     <PackageReference Include="NGettext" Version="0.6.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AWSLambda\AWSLambda.csproj" />
+  </ItemGroup>
+
 </Project>

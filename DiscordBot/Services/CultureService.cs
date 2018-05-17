@@ -10,13 +10,12 @@ namespace CCWallet.DiscordBot.Services
     {
         public CultureInfo DefaultCultureInfo { get; } = new CultureInfo("en");
 
+        private PreferenceService Preference { get; }
         private Dictionary<string, Catalog> Translations { get; } = new Dictionary<string, Catalog>();
-        private Dictionary<ulong, string> GuildLanguages { get; } = new Dictionary<ulong, string>();
-        private Dictionary<ulong, string> GroupLanguages { get; } = new Dictionary<ulong, string>();
-        private Dictionary<ulong, string> UserLanguages { get; } = new Dictionary<ulong, string>();
 
-        public CultureService()
+        public CultureService(PreferenceService preference)
         {
+            Preference = preference;
         }
 
         public void AddTranslation<T>() where T : Catalog, new()
@@ -31,22 +30,22 @@ namespace CCWallet.DiscordBot.Services
             return DefaultCultureInfo.Name == lang || (Translations.ContainsKey(lang) && Translations[lang].Translations.Count > 0);
         }
 
-        public void SetLanguage(IMessageChannel channel, string lang)
+        public void SetLanguage(IMessageChannel channel, IUserMessage message, string lang, bool channelOnly = false)
         {
             var culture = GetCatalog(new CultureInfo(lang)).CultureInfo;
             
             switch (channel)
             {
                 case IDMChannel dm:
-                    UserLanguages[dm.Recipient.Id] = culture.Name;
+                    Preference.GetUserPreference(dm.Recipient.Id).SetLanguage(lang, message);
                     break;
 
                 case IGroupChannel group:
-                    GroupLanguages[group.Id] = culture.Name;
+                    Preference.GetGroupPreference(group.Id).SetLanguage(lang, message);
                     break;
 
                 case IGuildChannel guild:
-                    GuildLanguages[guild.GuildId] = culture.Name;
+                    Preference.GetGuildPreference(guild.GuildId).SetLanguage(lang, message, channelOnly ? channel.Id : 0);
                     break;
 
                 default:
@@ -61,13 +60,13 @@ namespace CCWallet.DiscordBot.Services
                 switch (channel)
                 {
                     case IDMChannel dm:
-                        return GetCatalog(UserLanguages[dm.Recipient.Id]);
+                        return GetCatalog(Preference.GetUserPreference(dm.Recipient.Id).CultureInfo);
 
                     case IGroupChannel group:
-                        return GetCatalog(GroupLanguages[group.Id]);
+                        return GetCatalog(Preference.GetGroupPreference(group.Id).CultureInfo);
 
                     case IGuildChannel guild:
-                        return GetCatalog(GuildLanguages[guild.GuildId]);
+                        return GetCatalog(Preference.GetGuildPreference(guild.GuildId).GetCaltureInfo(channel));
 
                     default:
                         throw new ArgumentException();
