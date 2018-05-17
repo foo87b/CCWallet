@@ -151,7 +151,7 @@ namespace CCWallet.DiscordBot.Services
                 {
                     Boolean isLimited = false;
                     List<ulong> toRemove = new List<ulong>();
-                    ulong removeThreshold = (arg.Id >> 22) - 60000;
+                    ulong removeThreshold = (arg.Id >> 22) - 20000;
 
                     foreach (KeyValuePair<ulong, ulong> entry in RecentUsers)
                     {
