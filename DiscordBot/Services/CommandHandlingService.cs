@@ -171,6 +171,7 @@ namespace CCWallet.DiscordBot.Services
 
                     if (isLimited)
                     {
+                        await result.Value.Context.Message.AddReactionAsync(BotReaction.Denied);
                         await result.Value.Context.Message.AddReactionAsync(BotReaction.RateLimited);
                     }
                     else
