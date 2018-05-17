@@ -9,6 +9,15 @@ namespace CCWallet.AWSLambda.Entities
         [DataMember, DynamoDBHashKey("id")]
         public virtual ulong MessageId { get; set; }
 
+        [DataMember, DynamoDBProperty("user")]
+        public virtual ulong UserId { get; set; }
+
+        [DataMember, DynamoDBProperty("guild")]
+        public virtual ulong GuildId { get; set; }
+
+        [DataMember, DynamoDBProperty("channel")]
+        public virtual ulong ChannelId { get; set; }
+
         [DataMember, DynamoDBProperty("type")]
         public virtual int ChannelType { get; set; }
 

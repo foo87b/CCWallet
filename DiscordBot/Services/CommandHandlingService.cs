@@ -123,6 +123,9 @@ namespace CCWallet.DiscordBot.Services
                         var log = new AWSLambda.Entities.CommandLog()
                         {
                             MessageId = command.Context.Message.Id,
+                            UserId = command.Context.User.Id,
+                            GuildId = 0,
+                            ChannelId = command.Context.Channel.Id,
                             ChannelType = -1,
                             Prefix = command.Prefix,
                             Module = command.Module,
@@ -135,6 +138,7 @@ namespace CCWallet.DiscordBot.Services
                         {
                             case IGuildChannel _:
                                 log.ChannelType = 0;
+                                log.GuildId = command.Context.Guild.Id;
                                 break;
 
                             case IDMChannel _:
