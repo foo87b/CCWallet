@@ -119,6 +119,8 @@ namespace CCWallet.DiscordBot.Services
                 {
                     if (TryDequeue(prefix, out var command))
                     {
+                        Console.WriteLine($"[{DateTime.Now}] Id={command.Context.Message.Id}, User={command.Context.User.Id}, Input={command.Input}");
+                        
                         var result = await command.Service.ExecuteAsync(command.Context, command.Input, ServiceProvider);
                         var log = new AWSLambda.Entities.CommandLog()
                         {
