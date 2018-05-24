@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CCWallet.DiscordBot.Utilities
 {
-    public class UserWallet : ICoinSelector
+    public class UserWallet
     {
         public IUser User { get; }
         public Network Network { get; }
@@ -80,15 +80,16 @@ namespace CCWallet.DiscordBot.Utilities
         public Transaction BuildTransaction(IDestination destination, decimal amount)
         {
             var builder = Currency.GeTransactionBuilder();
+            var target = ConvertMoney(amount);
+            var coins = UnspentCoinSelector(target);
 
             var tx = builder
                 .SetChange(Address)
-                .SetCoinSelector(this)
                 .SetConsensusFactory(Network)
                 .AddKeys(GetExtKey().PrivateKey)
-                .AddCoins(UnspentCoins)
-                .Send(destination, ConvertMoney(amount))
-                .SendFees(Currency.CalculateFee(builder, UnspentCoins))
+                .AddCoins(coins)
+                .Send(destination, target)
+                .SendFees(Currency.CalculateFee(builder, coins))
                 .BuildTransaction(true);
 
             var result = Currency.VerifyTransaction(tx);
@@ -221,7 +222,14 @@ namespace CCWallet.DiscordBot.Utilities
             }
         }
 
-        IEnumerable<ICoin> ICoinSelector.Select(IEnumerable<ICoin> coins, IMoney target)
+        private IEnumerable<UnspentOutput.UnspentCoin> UnspentCoinSelector(Money target)
+        {
+            var coins = CoinSelector(UnspentCoins, target).Select(c => c.Outpoint);
+
+            return UnspentCoins.Where(c => coins.Contains(c.Outpoint));
+        }
+
+        private IEnumerable<ICoin> CoinSelector(IEnumerable<ICoin> coins, IMoney target)
         {
             var result = new HashSet<ICoin>();
             var zero = target.Sub(target);
