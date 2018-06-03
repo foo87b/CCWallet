@@ -45,6 +45,11 @@ namespace CCWallet.DiscordBot.Translations
                 {"Failed to send {0}.", new []{ "{0}の送付に失敗しました。" } },
                 {"It may take some time to receive an approved message from the network; you can also check the status with the Blockchain Explorer.", new []{ "ネットワークに承認されるまで少し時間を要します。ブロックチェーンエクスプローラー等も併せてご確認ください。" } },
 
+                // Using: BotCommand.Rain
+                {"Amount / User", new []{ "一人あたり送付量" } },
+                {"There are no users.", new []{ "対象となるユーザーがいません。" } },
+                {"Lower than the minimum rain amount.", new []{ "rainコマンドの最低量を下回っています。" } },
+
                 // Transaction Errors
                 {"Too many numbers after decimal point places.", new []{ "小数点以下が細かすぎます。" } },
                 {"Lower than the minimum transferable amount.", new []{ "送付可能な最低量を下回っています。" } },
@@ -54,7 +59,6 @@ namespace CCWallet.DiscordBot.Translations
                 {"Insufficient funds.", new []{ "ウォレットの残高が不足しているようです。" } },
                 {"Error - Transaction generation failed. {0}", new []{ "トランザクションの生成に失敗しました。 {0}" } },
                 {"Error - Transaction transmission failed. {0}", new []{ "トランザクションの送信に失敗しました。 {0}" } },
-
             };
         }
     }

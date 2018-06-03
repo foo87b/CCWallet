@@ -77,18 +77,23 @@ namespace CCWallet.DiscordBot.Utilities
             UnconfirmedMoney = MoneyExtensions.Sum(unconfirmed.Select(c => c.Amount));
         }
 
-        public Transaction BuildTransaction(IDestination destination, decimal amount)
+        public Transaction BuildTransaction(Dictionary<IDestination, decimal> outputs)
         {
             var builder = Currency.GeTransactionBuilder();
-            var target = ConvertMoney(amount);
-            var coins = UnspentCoinSelector(target);
-
-            var tx = builder
-                .SetChange(Address)
+            builder.SetChange(Address)
                 .SetConsensusFactory(Network)
-                .AddKeys(GetExtKey().PrivateKey)
+                .AddKeys(GetExtKey().PrivateKey);
+
+            var totalAmount = decimal.Zero;
+            foreach (var output in outputs)
+            {
+                totalAmount += output.Value;
+                builder.Send(output.Key, ConvertMoney(output.Value));
+            }
+
+            var coins = UnspentCoinSelector(ConvertMoney(totalAmount));
+            var tx = builder
                 .AddCoins(coins)
-                .Send(destination, target)
                 .SendFees(Currency.CalculateFee(builder, coins))
                 .BuildTransaction(true);
 
@@ -140,6 +145,30 @@ namespace CCWallet.DiscordBot.Utilities
             return Currency.FormatAmount(amount, CultureInfo);
         }
 
+        public void ValidateAmount(decimal amount, bool check)
+        {
+            // force overflow check.
+            if (amount > long.MaxValue / (decimal)Money.COIN)
+            {
+                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
+            }
+
+            if (check && (amount > Currency.MaxAmount))
+            {
+                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
+            }
+
+            if (check && amount < Currency.MinAmount)
+            {
+                throw new ArgumentOutOfRangeException(null, "Lower than the minimum transferable amount.");
+            }
+
+            if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
+            {
+                throw new ArgumentOutOfRangeException(null, "Too many numbers after decimal point places.");
+            }
+        }
+
         private ExtKey GetExtKey(int account = 0, int change = 0, int index = 0)
         {
             // BIP32 path: m / purpose' / coin_type' / account' / change / address_index
@@ -168,26 +197,7 @@ namespace CCWallet.DiscordBot.Utilities
 
         private Money ConvertMoney(decimal amount, bool check = true)
         {
-            // force overflow check.
-            if (amount > long.MaxValue / (decimal)Money.COIN)
-            {
-                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
-            }
-
-            if (check && (amount > Currency.MaxAmount))
-            {
-                throw new ArgumentOutOfRangeException(null, "Exceed the maximum amount.");
-            }
-
-            if (check && amount < Currency.MinAmount)
-            {
-                throw new ArgumentOutOfRangeException(null, "Lower than the minimum transferable amount.");
-            }
-
-            if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
-            {
-                throw new ArgumentOutOfRangeException(null, "Too many numbers after decimal point places.");
-            }
+            ValidateAmount(amount, check);
 
             return Money.FromUnit(amount, MoneyUnit.BTC);
         }
