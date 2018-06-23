@@ -13,7 +13,7 @@ namespace CCWallet.DiscordBot.Modules
         public override async Task CommandHelpAsync(string command = null) => await base.CommandHelpAsync(command);
         public override async Task CommandBalanceAsync() => await base.CommandBalanceAsync();
         public override async Task CommandDepositAsync() => await base.CommandDepositAsync();
-        public override async Task CommandTipAsync(IUser user, decimal amount) => await base.CommandTipAsync(user, amount);
+        public override async Task CommandTipAsync(IUser user, decimal amount, params string[] comment) => await base.CommandTipAsync(user, amount, comment);
         public override async Task CommandWithdrawAsync(string address, decimal amount) => await base.CommandWithdrawAsync(address, amount);
     }
 }

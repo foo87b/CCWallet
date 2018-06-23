@@ -104,7 +104,7 @@ namespace CCWallet.DiscordBot.Modules
         [Command(BotCommand.Tip)]
         [RequireContext(ContextType.Guild | ContextType.Group)]
         [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
-        public virtual async Task CommandTipAsync(IUser user, decimal amount)
+        public virtual async Task CommandTipAsync(IUser user, decimal amount, params string[] comment)
         {
             await Context.Channel.TriggerTypingAsync();
             await Wallet.UpdateBalanceAsync();
