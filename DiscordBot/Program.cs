@@ -49,6 +49,7 @@ namespace CCWallet.DiscordBot
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig()
                 {
                     DefaultRetryMode = RetryMode.AlwaysRetry,
+                    AlwaysDownloadUsers = true,
                 }));
         }
 
