@@ -14,6 +14,8 @@ namespace CCWallet.DiscordBot.Utilities
         int BaseAmountUnit { get; }
         decimal MinAmount { get; }
         decimal MaxAmount { get; }
+        decimal MinRainAmount { get; }
+        int MaxRainUsers { get; }
 
         string FormatMoney(Money money, CultureInfo culture, bool symbol = true);
         string FormatAmount(decimal amount, CultureInfo culture, bool symbol = true);

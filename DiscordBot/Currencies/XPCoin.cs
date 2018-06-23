@@ -22,6 +22,8 @@ namespace CCWallet.DiscordBot.Currencies
         int ICurrency.BaseAmountUnit { get; } = 1000000;
         decimal ICurrency.MinAmount { get; } = 0.01m;
         decimal ICurrency.MaxAmount { get; } = 1000000000m;
+        decimal ICurrency.MinRainAmount { get; } = 100m;
+        int ICurrency.MaxRainUsers { get; } = 500;
 
         private XPCoin()
         {
