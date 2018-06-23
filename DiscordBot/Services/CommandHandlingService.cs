@@ -157,16 +157,13 @@ namespace CCWallet.DiscordBot.Services
                         {
                             await command.Context.Message.AddReactionAsync(BotReaction.Error);
 
-                            PushLog(log);
                         }
                         else if (!result.IsSuccess)
                         {
                             await command.Context.Message.AddReactionAsync(BotReaction.Unknown);
                         }
-                        else
-                        {
-                            PushLog(log);
-                        }
+
+                        PushLog(log);
                     }
                 }
             }
