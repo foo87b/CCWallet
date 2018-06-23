@@ -2,10 +2,13 @@
 using CCWallet.DiscordBot.Utilities.Discord;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.Model;
 
 namespace CCWallet.DiscordBot.Modules
 {
@@ -57,6 +60,42 @@ namespace CCWallet.DiscordBot.Modules
             {
                 await ReplyFailureAsync(_("Unknown language. ({0})", lang));
             }
+        }
+
+        [Command("userinfo")]
+        [RequireContext(ContextType.DM | ContextType.Group | ContextType.Guild)]
+        [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions)]
+        public async Task CommandUserInfoAsync(ulong id, bool reload = false)
+        {
+            var client = Provider.GetService<DiscordSocketClient>();
+            var message = new List<string>();
+            
+            if (reload)
+            {
+                await client.DownloadUsersAsync(new[] { Context.Guild });
+            }
+
+            message.Add("[CacheMode.CacheOnly]");
+            message.Add($"Context.Guild.GetUserAsync: {await Context.Guild.GetUserAsync(id, CacheMode.CacheOnly) != null}");
+            message.Add($"Context.Channel.GetUserAsync: {await Context.Channel.GetUserAsync(id, CacheMode.CacheOnly) != null}");
+
+            message.Add("");
+            message.Add("[CacheMode.AllowDownload]");
+            message.Add($"Context.Guild.GetUserAsync: {await Context.Guild.GetUserAsync(id, CacheMode.AllowDownload) != null}");
+            message.Add($"Context.Channel.GetUserAsync: {await Context.Channel.GetUserAsync(id, CacheMode.AllowDownload) != null}");
+
+            message.Add("");
+            message.Add("[Other]");
+            message.Add($"DiscordSocketClient.GetUser: {client.GetUser(id) != null}");
+
+            if (reload)
+            {
+                message.Add("");
+                message.Add("[Reload]");
+                message.Add($"DiscordSocketClient.DownloadUsersAsync: {Context.Guild.Id}");
+            }
+
+            await ReplySuccessAsync($"```{String.Join(Environment.NewLine, message)}```");
         }
     }
 }
