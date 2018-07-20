@@ -185,6 +185,33 @@ namespace CCWallet.DiscordBot.Modules
             }, tx, displayOutputs, amount, error);
         }
 
+        [Command(BotCommand.SignMessage)]
+        [RequireContext(ContextType.DM)]
+        [RequireBotPermission(ChannelPermission.SendMessages | ChannelPermission.AddReactions | ChannelPermission.EmbedLinks)]
+        public virtual async Task CommandSignMessageAsync([Remainder] string message)
+        {
+            await Context.Channel.TriggerTypingAsync();
+
+            var signature = Wallet.SignMessage(message);
+
+            await ReplySuccessAsync(_("Message signed. Generate signature is `{0}`", signature), CreateEmbed(new EmbedBuilder()
+            {
+                Color = Color.DarkPurple,
+                Title = _("Sign Message"),
+                Description = String.Join("\n", new[]
+                {
+                    _("Details of the signed content are as follows."),
+                }),
+                Fields = new List<EmbedFieldBuilder>
+                {
+                    new EmbedFieldBuilder().WithName(_("Address")).WithValue($"```{Wallet.Address}```"),
+                    new EmbedFieldBuilder().WithName(_("Message")).WithValue($"```{message}```"),
+                    new EmbedFieldBuilder().WithName(_("Signature")).WithValue($"```{signature}```"),
+                },
+            }));
+
+        }
+
         protected virtual async Task ReplyTransferAsync(EmbedBuilder builder, Transaction tx, Dictionary<IDestination, decimal> outputs, decimal totalAmount, string error)
         {
             var convert = new Dictionary<string, decimal>();

@@ -8,5 +8,6 @@
         public const string Tip      = "tip";
         public const string Withdraw = "withdraw";
         public const string Rain     = "rain";
+        public const string SignMessage = "message sign";
     }
 }

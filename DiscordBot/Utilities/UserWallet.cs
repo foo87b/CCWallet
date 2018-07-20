@@ -8,7 +8,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using NBitcoin.Crypto;
+using NBitcoin.Protocol;
 
 namespace CCWallet.DiscordBot.Utilities
 {
@@ -166,6 +169,27 @@ namespace CCWallet.DiscordBot.Utilities
             if (check && amount % (1m / Currency.BaseAmountUnit) != 0)
             {
                 throw new ArgumentOutOfRangeException(null, "Too many numbers after decimal point places.");
+            }
+        }
+
+        public string SignMessage(string message)
+        {
+            var data = new List<byte[]>
+            {
+                Encoding.UTF8.GetBytes(Currency.MessageMagic),
+                Encoding.UTF8.GetBytes(message),
+            };
+
+            using (var stream = new MemoryStream())
+            {
+                foreach (var bytes in data)
+                {
+                    var header = new VarInt(Convert.ToUInt64(bytes.LongLength)).ToBytes();
+                    stream.Write(header, 0, header.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+
+                return Convert.ToBase64String(GetExtKey().PrivateKey.SignCompact(Hashes.Hash256(stream.ToArray())));
             }
         }
 

@@ -9,6 +9,7 @@ namespace CCWallet.DiscordBot.Utilities
     {
         string Name { get; }
         string IconUrl { get; }
+        string MessageMagic { get; }
         int BIP44CoinType { get; }
         int TransactionConfirms { get; }
         int BaseAmountUnit { get; }
