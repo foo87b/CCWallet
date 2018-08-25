@@ -199,8 +199,8 @@ namespace CCWallet.DiscordBot.Currencies
             var bytes = tx.GetSerializedSize();
             var coins = unspents.Where(c => op.Contains(c.Outpoint));
 
-            var priority = coins.Sum(c => Convert.ToDouble(c.Amount / 100 * c.Confirms)) / bytes;                        // NOTICE: Change Unit (BTC to XP)
-            var fee = priority > 576000d && bytes < 1000 ? Money.Zero : XPCoinTransaction.MinTxFee * (1 + bytes / 1000); // NOTICE: Change Unit (BTC to XP)
+            var priority = coins.Sum(c => c.Amount.ToDecimal(MoneyUnit.Satoshi) / 100 * c.Confirms) / bytes;                        // NOTICE: Change Unit (BTC to XP)
+            var fee = priority > 576000m && bytes < 1000 ? Money.Zero : XPCoinTransaction.MinTxFee * (1 + bytes / 1000); // NOTICE: Change Unit (BTC to XP)
 
             fee += tx.Outputs.Count(o => o.Value < Money.CENT) * XPCoinTransaction.MinTxFee;
 
